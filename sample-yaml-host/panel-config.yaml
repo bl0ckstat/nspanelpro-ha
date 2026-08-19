@@ -1,0 +1,24 @@
+# Sample panel YAML for local testing (NSPanel Tools–style placeholder keys).
+# Point the app’s “Panel YAML download URL” at:
+#   http://<your-mac-ip>:8765/panel-config.yaml
+
+version: 1
+device:
+  screen_brightness: 180
+  screen_timeout_seconds: 120
+  proximity_wake: true
+
+home_assistant:
+  default_dashboard: /lovelace/default_view
+
+panel:
+  idle_dim_percent: 40
+  show_status_bar: false
+  auto_brightness: true
+
+sensors:
+  report_interval_seconds: 30
+
+notes: |
+  Replace or extend this file with keys that match your real panel-tools schema.
+  This server is only for development.
