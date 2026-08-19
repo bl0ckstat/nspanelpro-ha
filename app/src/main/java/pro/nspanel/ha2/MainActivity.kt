@@ -19,7 +19,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 import pro.nspanel.ha2.diag.DiagServer
 import pro.nspanel.ha2.diag.DiagState
+import pro.nspanel.ha2.mqtt.MqttManager
 import pro.nspanel.ha2.screen.ScreenManager
+import pro.nspanel.ha2.sound.SoundPlayer
 import pro.nspanel.ha2.ui.PanelScreen
 import pro.nspanel.ha2.ui.theme.NSPanelHATheme
 
@@ -28,6 +30,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels { MainViewModelFactory(this) }
     private lateinit var screenManager: ScreenManager
     private lateinit var diagServer: DiagServer
+    private lateinit var mqttManager: MqttManager
     private var showStatusBar = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,6 +40,7 @@ class MainActivity : ComponentActivity() {
         applySystemBars(showStatusBar = false)
 
         screenManager = ScreenManager(this)
+        mqttManager = MqttManager(SoundPlayer(this))
         diagServer = DiagServer(applicationContext)
         DiagState.activityAlive = true
 
@@ -45,6 +49,10 @@ class MainActivity : ComponentActivity() {
                 launch {
                     viewModel.panelConfig.collect { config ->
                         screenManager.applyConfig(config)
+                        mqttManager.applyConfig(
+                            config.mqttBroker, config.mqttTopic,
+                            config.mqttUsername, config.mqttPassword,
+                        )
                         DiagState.panelConfig = config
                         diagServer.ensureRunning(config.diagPort)
                         if (config.showStatusBar != showStatusBar) {
@@ -89,6 +97,7 @@ class MainActivity : ComponentActivity() {
         DiagState.activityAlive = false
         diagServer.destroy()
         screenManager.destroy()
+        mqttManager.destroy()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

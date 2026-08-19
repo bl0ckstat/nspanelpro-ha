@@ -51,6 +51,22 @@ object PanelYamlParser {
         intKey("diag_port").find(stripped)?.groupValues?.get(1)?.toIntOrNull()?.let {
             c = c.copy(diagPort = it.coerceIn(0, 65535))
         }
+        stringKey("mqtt_broker").find(stripped)?.let { m ->
+            val v = m.groupValues[1].trim().trim('"', '\'')
+            if (v.isNotEmpty()) c = c.copy(mqttBroker = v)
+        }
+        stringKey("mqtt_topic").find(stripped)?.let { m ->
+            val v = m.groupValues[1].trim().trim('"', '\'')
+            if (v.isNotEmpty()) c = c.copy(mqttTopic = v)
+        }
+        stringKey("mqtt_username").find(stripped)?.let { m ->
+            val v = m.groupValues[1].trim().trim('"', '\'')
+            if (v.isNotEmpty()) c = c.copy(mqttUsername = v)
+        }
+        stringKey("mqtt_password").find(stripped)?.let { m ->
+            val v = m.groupValues[1].trim().trim('"', '\'')
+            if (v.isNotEmpty()) c = c.copy(mqttPassword = v)
+        }
 
         return c
     }

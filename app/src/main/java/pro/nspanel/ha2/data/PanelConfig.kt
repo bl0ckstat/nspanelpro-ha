@@ -15,6 +15,14 @@ data class PanelConfig(
     val autoBrightness: Boolean,
     /** TCP port for the diagnostics HTTP endpoint; 0 disables the server. */
     val diagPort: Int,
+    /** Broker the panel subscribes to for sound commands, e.g. the doorbell
+     *  chime. Blank leaves the client stopped. */
+    val mqttBroker: String,
+    /** Comma-separated topics; a panel normally listens on its own and on a
+     *  fleet-wide topic. */
+    val mqttTopic: String,
+    val mqttUsername: String,
+    val mqttPassword: String,
 ) {
     companion object {
         val DEFAULT = PanelConfig(
@@ -27,6 +35,10 @@ data class PanelConfig(
             sensorReportIntervalSeconds = 30,
             autoBrightness = true,
             diagPort = 8377,
+            mqttBroker = "",
+            mqttTopic = "",
+            mqttUsername = "",
+            mqttPassword = "",
         )
     }
 }

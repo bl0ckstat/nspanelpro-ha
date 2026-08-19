@@ -62,6 +62,10 @@ class ConfigPushReceiver : BroadcastReceiver() {
                         next = next.copy(manualAutoBrightness = intent.getBooleanExtra("auto_brightness", next.manualAutoBrightness))
                     if (intent.hasExtra("diag_port"))
                         next = next.copy(manualDiagPort = intent.getIntExtra("diag_port", next.manualDiagPort).coerceIn(0, 65535))
+                    intent.getStringExtra("mqtt_broker")?.let { next = next.copy(manualMqttBroker = it) }
+                    intent.getStringExtra("mqtt_topic")?.let { next = next.copy(manualMqttTopic = it) }
+                    intent.getStringExtra("mqtt_username")?.let { next = next.copy(manualMqttUsername = it) }
+                    intent.getStringExtra("mqtt_password")?.let { next = next.copy(manualMqttPassword = it) }
                     yamlUrl?.let { next = next.copy(panelYamlUrl = it) }
                     yamlBody?.let { next = next.copy(lastPanelYamlRaw = it) }
                     next

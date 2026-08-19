@@ -29,6 +29,10 @@ class SettingsRepository(private val context: Context) {
         val sensorInterval = intPreferencesKey("manual_sensor_interval_seconds")
         val autoBrightness = booleanPreferencesKey("manual_auto_brightness")
         val diagPort = intPreferencesKey("manual_diag_port")
+        val mqttBroker = stringPreferencesKey("manual_mqtt_broker")
+        val mqttTopic = stringPreferencesKey("manual_mqtt_topic")
+        val mqttUsername = stringPreferencesKey("manual_mqtt_username")
+        val mqttPassword = stringPreferencesKey("manual_mqtt_password")
     }
 
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
@@ -44,6 +48,10 @@ class SettingsRepository(private val context: Context) {
             manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
             manualAutoBrightness = prefs[Keys.autoBrightness] ?: PanelConfig.DEFAULT.autoBrightness,
             manualDiagPort = prefs[Keys.diagPort] ?: PanelConfig.DEFAULT.diagPort,
+            manualMqttBroker = prefs[Keys.mqttBroker].orEmpty(),
+            manualMqttTopic = prefs[Keys.mqttTopic].orEmpty(),
+            manualMqttUsername = prefs[Keys.mqttUsername].orEmpty(),
+            manualMqttPassword = prefs[Keys.mqttPassword].orEmpty(),
         )
     }
 
@@ -60,6 +68,16 @@ class SettingsRepository(private val context: Context) {
                 manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
                 manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
                 manualAutoBrightness = prefs[Keys.autoBrightness] ?: PanelConfig.DEFAULT.autoBrightness,
+                // Every stored key has to be read back here, not just the ones
+                // a caller is likely to change: `current` is written out whole
+                // below, so anything missed is silently reset to its default.
+                // manualDiagPort was missed, which reset a customised
+                // diagnostics port on any unrelated settings write.
+                manualDiagPort = prefs[Keys.diagPort] ?: PanelConfig.DEFAULT.diagPort,
+                manualMqttBroker = prefs[Keys.mqttBroker].orEmpty(),
+                manualMqttTopic = prefs[Keys.mqttTopic].orEmpty(),
+                manualMqttUsername = prefs[Keys.mqttUsername].orEmpty(),
+                manualMqttPassword = prefs[Keys.mqttPassword].orEmpty(),
             )
             val next = transform(current)
             prefs[Keys.haUrl] = next.homeAssistantUrl
@@ -73,6 +91,10 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.sensorInterval] = next.manualSensorIntervalSeconds
             prefs[Keys.autoBrightness] = next.manualAutoBrightness
             prefs[Keys.diagPort] = next.manualDiagPort
+            prefs[Keys.mqttBroker] = next.manualMqttBroker
+            prefs[Keys.mqttTopic] = next.manualMqttTopic
+            prefs[Keys.mqttUsername] = next.manualMqttUsername
+            prefs[Keys.mqttPassword] = next.manualMqttPassword
         }
     }
 }

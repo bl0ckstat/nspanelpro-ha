@@ -13,6 +13,10 @@ data class AppSettings(
     val manualSensorIntervalSeconds: Int = PanelConfig.DEFAULT.sensorReportIntervalSeconds,
     val manualAutoBrightness: Boolean = PanelConfig.DEFAULT.autoBrightness,
     val manualDiagPort: Int = PanelConfig.DEFAULT.diagPort,
+    val manualMqttBroker: String = "",
+    val manualMqttTopic: String = "",
+    val manualMqttUsername: String = "",
+    val manualMqttPassword: String = "",
 )
 
 /** Effective panel config when no YAML is loaded (panelYamlUrl blank). */
@@ -26,4 +30,8 @@ fun AppSettings.toManualPanelConfig() = PanelConfig(
     sensorReportIntervalSeconds = manualSensorIntervalSeconds,
     autoBrightness = manualAutoBrightness,
     diagPort = manualDiagPort,
+    mqttBroker = manualMqttBroker,
+    mqttTopic = manualMqttTopic,
+    mqttUsername = manualMqttUsername,
+    mqttPassword = manualMqttPassword,
 )
