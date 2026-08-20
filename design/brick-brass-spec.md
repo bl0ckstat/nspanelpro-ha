@@ -102,4 +102,4 @@ Material Design Icons (MDI — native to HA). Weight consistent, ~22px in chips/
 - **Bedroom / bedside / office / front panels**: status bar + climate card + fan row + tiles as specced; kill all blue `−/+` buttons → terracotta; yellow actives → brass.
 - **Kitchen panel**: blind sliders use the gradient slider; warmth (K) slider likewise with bulb toggle as a square `--raised` button.
 - **Fan remote page**: remote/button rows component.
-- **Desktop overview (nexfoto)**: same tokens; 3-column layout unchanged; section headers Archivo 600 15px with 18px MDI icon, `--muted`.
+- **Desktop overview**: same tokens; 3-column layout unchanged; section headers Archivo 600 15px with 18px MDI icon, `--muted`.
