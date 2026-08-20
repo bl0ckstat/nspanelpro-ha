@@ -165,6 +165,9 @@ class ScreenManager(
                     )
                 }
                 if (near && config.proximityWake && state != State.AWAKE) wake()
+                // Presence ended: the room just emptied, so the idle clock
+                // starts now, not back at the last touch.
+                if (!near && config.proximityWake && state == State.AWAKE) rescheduleIdle()
             }
             Sensor.TYPE_LIGHT -> {
                 smoothedLux = smoothedLux * (1f - LUX_EMA_ALPHA) + event.values[0] * LUX_EMA_ALPHA
@@ -194,6 +197,15 @@ class ScreenManager(
         offJob?.cancel()
         idleJob = scope.launch {
             delay(config.screenTimeoutSeconds * 1_000L)
+            // Someone is still there — don't dim in their face. This matters
+            // most on the Gen2 radar, which reports presence *changes* only:
+            // once the panel dimmed with someone in the room, no further event
+            // could ever arrive to wake it, because nothing changed. Waking on
+            // arrival and dimming during presence were fighting each other.
+            if (config.proximityWake && _stats.value.proximityNear) {
+                rescheduleIdle()
+                return@launch
+            }
             setState(State.DIM)
             applyBrightness(dimBrightness())
             offJob = scope.launch {

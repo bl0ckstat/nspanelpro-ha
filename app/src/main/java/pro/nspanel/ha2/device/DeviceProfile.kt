@@ -67,12 +67,12 @@ data class DeviceProfile(
                 sdkInt = sdkInt,
                 minBrightness = 0.01f,
                 proximityNearFraction = 0.5f,
-                proximityReflectanceNear = 500f,
+                proximityReflectanceNear = 300f,
                 proximityNearHigh = true,
                 // Gen1 idles in the tens and spikes past 40000; the radar in
                 // Gen2 only ever says 0 or 1.
                 proximityDefaultTrigger =
-                    if (generation == PanelGeneration.GEN2) 0.5f else 500f,
+                    if (generation == PanelGeneration.GEN2) 0.5f else 300f,
                 bootLaunchViaReceiver = sdkInt < 29,
             )
         }
