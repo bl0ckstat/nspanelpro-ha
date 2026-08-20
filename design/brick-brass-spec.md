@@ -103,3 +103,20 @@ Material Design Icons (MDI — native to HA). Weight consistent, ~22px in chips/
 - **Kitchen panel**: blind sliders use the gradient slider; warmth (K) slider likewise with bulb toggle as a square `--raised` button.
 - **Fan remote page**: remote/button rows component.
 - **Desktop overview**: same tokens; 3-column layout unchanged; section headers Archivo 600 15px with 18px MDI icon, `--muted`.
+
+---
+
+## Deployment deviations (as-built)
+
+Recorded where they were decided, so the spec and the fleet don't silently
+disagree:
+
+1. **Theme is mode-less.** The handoff scoped all tokens under `modes: dark:`;
+   the panels' WebViews report a light colour scheme, so scoped that way the
+   theme never applied on the hardware it was designed for. Deployed flat.
+
+2. **Row buttons are fill-height rectangles, not squares** (owner approved,
+   2026-08-20). A square can never be wider than its share of the row, so
+   strips with different button counts sat at different heights — kitchen's
+   five floated in bands while bedroom's four sat flush. Alignment across
+   panels beat exact squareness; corner radius and borders unchanged.
