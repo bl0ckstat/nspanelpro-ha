@@ -111,6 +111,10 @@ object DiagSnapshot {
             put("screen_brightness", config.screenBrightness)
             put("screen_timeout_seconds", config.screenTimeoutSeconds)
             put("proximity_wake", config.proximityWake)
+            // Both halves of the trigger, so a panel reporting the wrong side
+            // of it can be diagnosed without opening its settings sheet.
+            put("proximity_threshold", config.proximityThreshold.toDouble())
+            put("proximity_near_high", config.proximityNearHigh)
             put("idle_dim_percent", config.idleDimPercent)
             put("show_status_bar", config.showStatusBar)
             put("report_interval_seconds", config.sensorReportIntervalSeconds)
