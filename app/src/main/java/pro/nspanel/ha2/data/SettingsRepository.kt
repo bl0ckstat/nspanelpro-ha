@@ -26,6 +26,7 @@ class SettingsRepository(private val context: Context) {
         val timeout = intPreferencesKey("manual_timeout_seconds")
         val proximityWake = booleanPreferencesKey("manual_proximity_wake")
         val proximityThreshold = floatPreferencesKey("manual_proximity_threshold")
+        val proximityNearHigh = booleanPreferencesKey("manual_proximity_near_high")
         val idleDim = intPreferencesKey("manual_idle_dim_percent")
         val showStatusBar = booleanPreferencesKey("manual_show_status_bar")
         val sensorInterval = intPreferencesKey("manual_sensor_interval_seconds")
@@ -47,6 +48,8 @@ class SettingsRepository(private val context: Context) {
             manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
             manualProximityThreshold = prefs[Keys.proximityThreshold]
                 ?: PanelConfig.DEFAULT.proximityThreshold,
+            manualProximityNearHigh = prefs[Keys.proximityNearHigh]
+                ?: PanelConfig.DEFAULT.proximityNearHigh,
             manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
             manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
             manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -70,6 +73,8 @@ class SettingsRepository(private val context: Context) {
                 manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
                 manualProximityThreshold = prefs[Keys.proximityThreshold]
                     ?: PanelConfig.DEFAULT.proximityThreshold,
+                manualProximityNearHigh = prefs[Keys.proximityNearHigh]
+                    ?: PanelConfig.DEFAULT.proximityNearHigh,
                 manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
                 manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
                 manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -93,6 +98,7 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.timeout] = next.manualTimeoutSeconds
             prefs[Keys.proximityWake] = next.manualProximityWake
             prefs[Keys.proximityThreshold] = next.manualProximityThreshold
+            prefs[Keys.proximityNearHigh] = next.manualProximityNearHigh
             prefs[Keys.idleDim] = next.manualIdleDimPercent
             prefs[Keys.showStatusBar] = next.manualShowStatusBar
             prefs[Keys.sensorInterval] = next.manualSensorIntervalSeconds

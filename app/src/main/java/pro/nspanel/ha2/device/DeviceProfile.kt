@@ -59,18 +59,26 @@ data class DeviceProfile(
     /**
      * Whether a raw proximity reading means something is in front of the panel.
      *
-     * The two panel generations ship sensors that report on incompatible scales,
-     * so the rule is chosen from the reading itself rather than the generation:
-     * a value above the sensor's own declared maximum cannot be a distance, so
-     * it is treated as reflectance, where near means a large value. Distance
-     * sensors keep the original "close to zero" test.
+     * The direction is stated by [nearHigh], not inferred. It used to be
+     * inferred — a reading above the sensor's declared maximum was taken as
+     * reflectance — and that quietly inverted whole panels: the 120mm units
+     * rest at 0 against a declared range of 9, so they failed the test, took
+     * the distance rule, and reported "near" continuously with nothing in
+     * front of them. Panels on the same board with the same model string
+     * disagree about this, so there is nothing reliable to infer it from.
      */
-    fun isProximityNear(raw: Float, maxRange: Float, threshold: Float = 0f): Boolean =
-        if (maxRange > 0f && raw > maxRange) {
-            // Reflectance: near is a *large* reading, so the threshold is a floor.
-            raw > if (threshold > 0f) threshold else proximityReflectanceNear
-        } else {
-            // Distance: near is a *small* reading, so the threshold is a ceiling.
-            raw < if (threshold > 0f) threshold else maxRange * proximityNearFraction
+    fun isProximityNear(
+        raw: Float,
+        maxRange: Float,
+        threshold: Float = 0f,
+        nearHigh: Boolean = true,
+    ): Boolean {
+        val trigger = when {
+            threshold > 0f -> threshold
+            nearHigh -> proximityReflectanceNear
+            else -> maxRange * proximityNearFraction
         }
+        return if (nearHigh) raw > trigger else raw < trigger
+    }
+
 }

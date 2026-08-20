@@ -133,7 +133,7 @@ class ScreenManager(
             Sensor.TYPE_PROXIMITY -> {
                 val maxRange = proximitySensor?.maximumRange ?: 5f
                 val raw = event.values[0]
-                val near = profile.isProximityNear(raw, maxRange, config.proximityThreshold)
+                val near = profile.isProximityNear(raw, maxRange, config.proximityThreshold, config.proximityNearHigh)
                 _stats.update {
                     it.copy(
                         proximityNear = near,

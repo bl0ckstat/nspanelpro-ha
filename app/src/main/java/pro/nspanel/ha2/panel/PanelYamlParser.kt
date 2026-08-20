@@ -35,6 +35,9 @@ object PanelYamlParser {
         numKey("proximity_threshold").find(stripped)?.groupValues?.get(1)?.toFloatOrNull()?.let {
             c = c.copy(proximityThreshold = it.coerceAtLeast(0f))
         }
+        boolKey("proximity_near_high").find(stripped)?.let { m ->
+            c = c.copy(proximityNearHigh = m.groupValues[1].equals("true", ignoreCase = true))
+        }
         stringKey("default_dashboard").find(stripped)?.let { m ->
             val v = m.groupValues[1].trim().trim('"', '\'')
             if (v.isNotEmpty()) c = c.copy(defaultDashboard = v)

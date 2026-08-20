@@ -16,6 +16,16 @@ data class PanelConfig(
      * setting so it can be dialled in by hand.
      */
     val proximityThreshold: Float,
+    /**
+     * Which direction means "someone is there".
+     *
+     * A reflectance sensor reads LOW with nothing in front of it and climbs as
+     * a hand approaches; a distance sensor does the opposite. This cannot be
+     * inferred from a single reading — panels in the same family, on the same
+     * board, differ — so it is stated rather than guessed. True is reflectance,
+     * which is what the NSPanel Pro hardware reports.
+     */
+    val proximityNearHigh: Boolean,
     val defaultDashboard: String,
     val idleDimPercent: Int,
     val showStatusBar: Boolean,
@@ -38,6 +48,7 @@ data class PanelConfig(
             screenTimeoutSeconds = 120,
             proximityWake = true,
             proximityThreshold = 0f,
+            proximityNearHigh = true,
             defaultDashboard = "/lovelace/default_view",
             idleDimPercent = 40,
             showStatusBar = false,

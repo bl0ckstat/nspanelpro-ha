@@ -423,6 +423,10 @@ fun PanelScreen(
                                     onThresholdChange = {
                                         draft = draft.copy(manualProximityThreshold = it)
                                     },
+                                    nearHigh = draft.manualProximityNearHigh,
+                                    onNearHighChange = {
+                                        draft = draft.copy(manualProximityNearHigh = it)
+                                    },
                                     stats = stats,
                                     bodySize = bodySize,
                                     captionSize = captionSize,
@@ -488,6 +492,8 @@ fun PanelScreen(
 private fun ProximityThresholdField(
     threshold: Float,
     onThresholdChange: (Float) -> Unit,
+    nearHigh: Boolean,
+    onNearHighChange: (Boolean) -> Unit,
     stats: ScreenStats,
     bodySize: androidx.compose.ui.unit.TextUnit,
     captionSize: androidx.compose.ui.unit.TextUnit,
@@ -539,6 +545,15 @@ private fun ProximityThresholdField(
             )
         }
     }
+    // Which side of the trigger counts as occupied. Stated, not guessed: the
+    // panels disagree, and getting it backwards leaves the screen permanently
+    // awake or permanently asleep.
+    LabeledSwitch(
+        label = "Near is a higher reading",
+        checked = nearHigh,
+        onCheckedChange = onNearHighChange,
+        bodySize = bodySize,
+    )
     Spacer(modifier = Modifier.height(4.dp))
 }
 
