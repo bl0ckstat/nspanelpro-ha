@@ -182,7 +182,28 @@ dashboard above anything else that tries to take the screen.
 There is no analytics and no outbound traffic beyond your Home Assistant
 instance and your MQTT broker.
 
+## Releasing
+
+Pushing a `vN.N.N` tag builds a signed APK and attaches it to the release
+(`.github/workflows/release.yml`). Two things are load-bearing for the fleet
+tooling and the workflow asserts both rather than trusting them: the tag must
+match `versionName`, and the asset must be named `app-release.apk`.
+
+It needs four repository secrets — *Settings → Secrets and variables →
+Actions*:
+
+| Secret | What it is |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 your-release.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | `storePassword` |
+| `ANDROID_KEY_ALIAS` | `keyAlias` |
+| `ANDROID_KEY_PASSWORD` | `keyPassword` |
+
+It must be the **same keystore used for previous releases**. Android will not
+install an APK over one signed by a different key, so a new key means
+uninstalling every panel by hand — and an uninstall wipes `ha_url`, leaving a
+blank screen until config is pushed back.
+
 ## Licence
 
-Not yet chosen. Until one is added, the usual default applies: all rights
-reserved.
+MIT — see `LICENSE`.
