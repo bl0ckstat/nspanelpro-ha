@@ -199,10 +199,36 @@ Actions*:
 | `ANDROID_KEY_ALIAS` | `keyAlias` |
 | `ANDROID_KEY_PASSWORD` | `keyPassword` |
 
-It must be the **same keystore used for previous releases**. Android will not
-install an APK over one signed by a different key, so a new key means
-uninstalling every panel by hand — and an uninstall wipes `ha_url`, leaving a
-blank screen until config is pushed back.
+For this repo those secrets must hold the **same keystore used for previous
+releases**. Android will not install an APK over one signed by a different key,
+so a new key means uninstalling every panel by hand — and an uninstall wipes
+`ha_url`, leaving a blank screen until config is pushed back.
+
+### If you are forking this
+
+You cannot use the upstream signing key, and you do not want it. Generate your
+own once and keep it for the life of your panels:
+
+```sh
+keytool -genkeypair -v \
+  -keystore ~/keystores/my-nspanel.jks \
+  -alias nspanel -keyalg RSA -keysize 2048 -validity 10950
+```
+
+Then copy `keystore.properties.example` to `keystore.properties` and point it
+at that file, or set the four secrets above from it if you want CI to build for
+you.
+
+Two consequences worth understanding before you start:
+
+- **A release published here cannot be installed over your build, and yours
+  cannot be installed over one from here.** Different keys mean Android treats
+  them as unrelated apps. Pick one source of builds and stay with it; switching
+  later costs an uninstall on every panel.
+- **Losing your keystore is permanent.** There is no recovery and no re-issue.
+  Every panel you have installed on would need uninstalling by hand, which
+  wipes its stored `ha_url` along with the app. Back the file up somewhere
+  durable, with its passwords, the day you create it.
 
 ## Licence
 
