@@ -27,14 +27,21 @@ The stock launcher gets you a browser. That is not the same as a wall panel:
 
 ## Hardware
 
-| Panel | Android | WebView | Notes |
-| --- | --- | --- | --- |
-| `px30_evb` (80mm) | 8.1 / SDK 27 | Chromium 107 | The original NSPanel Pro |
-| `PX30_Android11` (newer 80mm) | 11 / SDK 30 | Chromium 131 | |
+| Panel | Screen | CSS viewport | Android | WebView |
+| --- | --- | --- | --- | --- |
+| 86mm square (`px30_evb`) | 480×480 @160dpi | 480×480 | 8.1 / SDK 27 | Chromium 107 |
+| 86mm square, newer (`PX30_Android11`) | 480×480 @160dpi | 480×480 | 11 / SDK 30 | Chromium 131 |
+| 120mm US (`px30_evb`) | 750×1334 @240dpi | 500×889 | 8.1 / SDK 27 | Chromium 107 |
 
-Both are 480×480. `minSdk` is 26, so other Android devices will run it — a
-tablet reports as `UNKNOWN` and takes conservative defaults rather than
-guessing at hardware it cannot identify.
+The 120mm is portrait, not a larger square, and at 240dpi its
+`devicePixelRatio` is 1.5 — so its 1334 physical rows are only 889 CSS pixels.
+A dashboard sized against the physical numbers comes out half again too large
+there. It reports the same `px30_evb` model as the 86mm, so the model string
+cannot distinguish them; the viewport can.
+
+`minSdk` is 26, so other Android devices will run it — a tablet reports as
+`UNKNOWN` and takes conservative defaults rather than guessing at hardware it
+cannot identify.
 
 Chromium 107 matters if you write your own cards: it predates `color-mix()`,
 and it does not report `prefers-color-scheme: dark`, so those panels cannot
