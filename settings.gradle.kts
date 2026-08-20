@@ -16,5 +16,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "nspanel-pro2-ha"
+rootProject.name = "nspanelpro-ha"
 include(":app")

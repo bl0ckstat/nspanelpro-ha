@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUBNETS_CONF="${SCRIPT_DIR}/subnets.conf"
 PANELS_DIR="${SCRIPT_DIR}/panels"
-APK_PATH="${SCRIPT_DIR}/nspanel-pro2-ha.apk"   # build output; place here before running
+APK_PATH="${SCRIPT_DIR}/nspanelpro-ha.apk"   # build output; place here before running
 
 APP_PACKAGE="pro.nspanel.ha2"
 APP_ACTIVITY=".MainActivity"
