@@ -52,14 +52,19 @@ class ConfigPushReceiver : BroadcastReceiver() {
                         next = next.copy(manualTimeoutSeconds = intent.getIntExtra("screen_timeout_seconds", next.manualTimeoutSeconds).coerceAtLeast(0))
                     if (intent.hasExtra("proximity_wake"))
                         next = next.copy(manualProximityWake = intent.getBooleanExtra("proximity_wake", next.manualProximityWake))
-                    if (intent.hasExtra("proximity_near_high"))
+                    if (intent.hasExtra("proximity_near_high")) {
+                        val asString = intent.getStringExtra("proximity_near_high")
                         next = next.copy(
-                            manualProximityNearHigh = intent
-                                .getBooleanExtra(
+                            manualProximityNearHigh = when {
+                                asString.equals("auto", ignoreCase = true) -> null
+                                asString != null -> asString.equals("true", ignoreCase = true)
+                                else -> intent.getBooleanExtra(
                                     "proximity_near_high",
                                     next.manualProximityNearHigh ?: true,
                                 )
+                            }
                         )
+                    }
                     if (intent.hasExtra("proximity_threshold"))
                         next = next.copy(
                             manualProximityThreshold = intent

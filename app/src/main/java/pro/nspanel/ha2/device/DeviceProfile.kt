@@ -32,11 +32,18 @@ data class DeviceProfile(
     /**
      * Which way this generation's sensor reads, when the config says nothing.
      *
-     * Gen1 panels return reflectance: tens of thousands with a hand in front,
-     * tens without. Gen2 returns Android's ordinary proximity value — 0 for
-     * near, the declared maximum for far — so the comparison flips.
+     * Higher-means-near for every panel we have met. Gen1 reports reflected
+     * IR that climbs on approach; Gen2's "proximity" is a presence radar
+     * mapped to 1 present / 0 clear. v0.5.5 assumed Gen2 followed the phone
+     * convention (0 = near, against the ear) — measured on hardware, it is
+     * the opposite, and the panel woke when the room emptied. What actually
+     * differs between the generations is the scale, carried by
+     * [proximityDefaultTrigger].
      */
     val proximityNearHigh: Boolean,
+    /** The trigger used when the config sets none: between the resting and
+     *  detected readings for this generation's sensor. */
+    val proximityDefaultTrigger: Float,
     /** Whether BOOT_COMPLETED startActivity is expected to work (pre-API-29). */
     val bootLaunchViaReceiver: Boolean,
 ) {
@@ -61,7 +68,11 @@ data class DeviceProfile(
                 minBrightness = 0.01f,
                 proximityNearFraction = 0.5f,
                 proximityReflectanceNear = 500f,
-                proximityNearHigh = generation != PanelGeneration.GEN2,
+                proximityNearHigh = true,
+                // Gen1 idles in the tens and spikes past 40000; the radar in
+                // Gen2 only ever says 0 or 1.
+                proximityDefaultTrigger =
+                    if (generation == PanelGeneration.GEN2) 0.5f else 500f,
                 bootLaunchViaReceiver = sdkInt < 29,
             )
         }
@@ -86,7 +97,7 @@ data class DeviceProfile(
     ): Boolean {
         val trigger = when {
             threshold > 0f -> threshold
-            nearHigh -> proximityReflectanceNear
+            nearHigh -> proximityDefaultTrigger
             else -> maxRange * proximityNearFraction
         }
         return if (nearHigh) raw > trigger else raw < trigger
