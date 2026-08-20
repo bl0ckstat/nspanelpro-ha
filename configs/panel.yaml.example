@@ -1,0 +1,12 @@
+# Per-device config for the original deploy script. Copy to configs/<ip>.yaml.
+# The fleet tooling in deploy/ supersedes this; kept for single-device use.
+ha_url: "http://homeassistant.local:8123"
+yaml_url: ""
+screen_brightness: 200
+screen_timeout_seconds: 120
+idle_dim_percent: 10
+auto_brightness: true
+proximity_wake: true
+report_interval_seconds: 30
+show_status_bar: false
+diag_port: 8377

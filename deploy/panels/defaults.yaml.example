@@ -1,0 +1,50 @@
+# Settings shared by every panel. A per-panel file beside this one
+# (panel-<ip>.yaml) holds only what genuinely differs for that panel; anything
+# it omits is inherited from here.
+#
+# This split exists because near-identical copies drifted apart without anyone
+# noticing, and stale values pointed panels at a host that no longer existed. A
+# value that is the same everywhere belongs in one place.
+#
+# Nothing here names a hardware generation. The app derives that from the SDK
+# level at runtime and branches on it, so a generation recorded here would only
+# duplicate a fact the device already knows and can drift from.
+
+ha_url: "http://homeassistant.local:8123"
+yaml_url: ""
+
+# Brightness 0-255 (30 is roughly the minimum visible)
+screen_brightness: 180
+
+# Seconds before the screen dims
+screen_timeout_seconds: 120
+
+# Dim level as a percentage of screen_brightness (0 = off)
+idle_dim_percent: 40
+
+# Scale brightness automatically using the light sensor
+auto_brightness: true
+
+# Wake the screen when the proximity sensor detects a hand
+proximity_wake: true
+
+# How often sensor readings are reported (seconds)
+report_interval_seconds: 30
+
+# Show the Android status bar
+show_status_bar: false
+
+# TCP port for the diagnostics endpoint (GET /diag, GET /healthz); 0 disables
+diag_port: 8377
+
+# MQTT. Home Assistant rings the panels with:
+#   action: mqtt.publish
+#   data:
+#     topic: "nspanel/all/command"   # or nspanel/<panel-ip>/command for one
+#     payload: "doorbell"
+mqtt_broker: "tcp://homeassistant.local:1883"
+mqtt_topic: "nspanel/all/command"
+mqtt_username: "panel"
+# Never set here. The deploy tooling substitutes MQTT_PASSWORD from
+# configs/secrets.env, which is gitignored.
+mqtt_password: ""

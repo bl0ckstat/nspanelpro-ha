@@ -1,0 +1,9 @@
+# Copy to panel-<ip>.yaml, one per panel. Carry ONLY what differs for that
+# panel — everything else comes from defaults.yaml beside this file.
+#
+# Subscribing to its own address as well as the fleet-wide topic lets a panel
+# be rung on its own or with the rest.
+mqtt_topic: "nspanel/192.0.2.10/command,nspanel/all/command"
+
+# Only if this panel should open somewhere other than the shared default.
+# ha_url: "http://homeassistant.local:8123/my-panel-dashboard/0"
