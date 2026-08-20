@@ -29,6 +29,14 @@ data class DeviceProfile(
      * above the resting noise band and far below a real detection.
      */
     val proximityReflectanceNear: Float,
+    /**
+     * Which way this generation's sensor reads, when the config says nothing.
+     *
+     * Gen1 panels return reflectance: tens of thousands with a hand in front,
+     * tens without. Gen2 returns Android's ordinary proximity value — 0 for
+     * near, the declared maximum for far — so the comparison flips.
+     */
+    val proximityNearHigh: Boolean,
     /** Whether BOOT_COMPLETED startActivity is expected to work (pre-API-29). */
     val bootLaunchViaReceiver: Boolean,
 ) {
@@ -42,8 +50,10 @@ data class DeviceProfile(
                 sdkInt == 30 -> PanelGeneration.GEN2
                 else -> PanelGeneration.UNKNOWN
             }
-            // Both generations use identical values for now; diverge here as
-            // hardware quirks (brightness floor, proximity range) are found.
+            // The generations diverge on how their proximity sensors report.
+            // Measured across a fleet of both: Gen1 idles in the tens and
+            // spikes past 40000 with a hand in front; Gen2 reports only 0 or
+            // its declared maximum of 1, Android's ordinary near/far.
             return DeviceProfile(
                 generation = generation,
                 model = model,
@@ -51,6 +61,7 @@ data class DeviceProfile(
                 minBrightness = 0.01f,
                 proximityNearFraction = 0.5f,
                 proximityReflectanceNear = 500f,
+                proximityNearHigh = generation != PanelGeneration.GEN2,
                 bootLaunchViaReceiver = sdkInt < 29,
             )
         }

@@ -25,7 +25,7 @@ data class PanelConfig(
      * board, differ — so it is stated rather than guessed. True is reflectance,
      * which is what the NSPanel Pro hardware reports.
      */
-    val proximityNearHigh: Boolean,
+    val proximityNearHigh: Boolean?,
     val defaultDashboard: String,
     val idleDimPercent: Int,
     val showStatusBar: Boolean,
@@ -48,7 +48,7 @@ data class PanelConfig(
             screenTimeoutSeconds = 120,
             proximityWake = true,
             proximityThreshold = 0f,
-            proximityNearHigh = true,
+            proximityNearHigh = null,
             defaultDashboard = "/lovelace/default_view",
             idleDimPercent = 40,
             showStatusBar = false,

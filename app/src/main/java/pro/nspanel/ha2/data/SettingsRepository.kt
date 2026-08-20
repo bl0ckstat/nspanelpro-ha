@@ -48,8 +48,7 @@ class SettingsRepository(private val context: Context) {
             manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
             manualProximityThreshold = prefs[Keys.proximityThreshold]
                 ?: PanelConfig.DEFAULT.proximityThreshold,
-            manualProximityNearHigh = prefs[Keys.proximityNearHigh]
-                ?: PanelConfig.DEFAULT.proximityNearHigh,
+            manualProximityNearHigh = prefs[Keys.proximityNearHigh],
             manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
             manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
             manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -73,8 +72,7 @@ class SettingsRepository(private val context: Context) {
                 manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
                 manualProximityThreshold = prefs[Keys.proximityThreshold]
                     ?: PanelConfig.DEFAULT.proximityThreshold,
-                manualProximityNearHigh = prefs[Keys.proximityNearHigh]
-                    ?: PanelConfig.DEFAULT.proximityNearHigh,
+                manualProximityNearHigh = prefs[Keys.proximityNearHigh],
                 manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
                 manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
                 manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -98,7 +96,8 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.timeout] = next.manualTimeoutSeconds
             prefs[Keys.proximityWake] = next.manualProximityWake
             prefs[Keys.proximityThreshold] = next.manualProximityThreshold
-            prefs[Keys.proximityNearHigh] = next.manualProximityNearHigh
+            next.manualProximityNearHigh?.let { prefs[Keys.proximityNearHigh] = it }
+                ?: prefs.remove(Keys.proximityNearHigh)
             prefs[Keys.idleDim] = next.manualIdleDimPercent
             prefs[Keys.showStatusBar] = next.manualShowStatusBar
             prefs[Keys.sensorInterval] = next.manualSensorIntervalSeconds

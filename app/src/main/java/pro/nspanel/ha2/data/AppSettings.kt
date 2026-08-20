@@ -9,7 +9,7 @@ data class AppSettings(
     val manualTimeoutSeconds: Int = PanelConfig.DEFAULT.screenTimeoutSeconds,
     val manualProximityWake: Boolean = PanelConfig.DEFAULT.proximityWake,
     val manualProximityThreshold: Float = PanelConfig.DEFAULT.proximityThreshold,
-    val manualProximityNearHigh: Boolean = PanelConfig.DEFAULT.proximityNearHigh,
+    val manualProximityNearHigh: Boolean? = PanelConfig.DEFAULT.proximityNearHigh,
     val manualIdleDimPercent: Int = PanelConfig.DEFAULT.idleDimPercent,
     val manualShowStatusBar: Boolean = PanelConfig.DEFAULT.showStatusBar,
     val manualSensorIntervalSeconds: Int = PanelConfig.DEFAULT.sensorReportIntervalSeconds,

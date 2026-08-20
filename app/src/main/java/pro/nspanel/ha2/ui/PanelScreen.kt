@@ -423,7 +423,8 @@ fun PanelScreen(
                                     onThresholdChange = {
                                         draft = draft.copy(manualProximityThreshold = it)
                                     },
-                                    nearHigh = draft.manualProximityNearHigh,
+                                    nearHigh = draft.manualProximityNearHigh
+                                        ?: (stats.generation != pro.nspanel.ha2.device.PanelGeneration.GEN2),
                                     onNearHighChange = {
                                         draft = draft.copy(manualProximityNearHigh = it)
                                     },

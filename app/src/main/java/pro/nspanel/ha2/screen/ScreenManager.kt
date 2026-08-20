@@ -74,6 +74,11 @@ class ScreenManager(
 
     fun applyConfig(newConfig: PanelConfig) {
         config = newConfig
+        // Re-judge the last reading against the new trigger. These sensors only
+        // report on change, so without this a threshold typed into the settings
+        // sheet does nothing visible until someone walks past — which is exactly
+        // the moment you are not watching the number you just typed.
+        reevaluateProximity()
         if (!running) return
         when (state) {
             State.AWAKE -> { applyBrightness(awakeBrightness()); rescheduleIdle() }
@@ -126,6 +131,19 @@ class ScreenManager(
         scope.cancel()
     }
 
+    /** Recompute "near" from the reading already in hand. */
+    private fun reevaluateProximity() {
+        val last = _stats.value
+        if (last.proximityRaw < 0f) return
+        val near = profile.isProximityNear(
+            last.proximityRaw,
+            last.proximityMaxRange,
+            config.proximityThreshold,
+            config.proximityNearHigh ?: profile.proximityNearHigh,
+        )
+        if (near != last.proximityNear) _stats.update { it.copy(proximityNear = near) }
+    }
+
     // ── SensorEventListener ───────────────────────────────────────────────────
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -133,7 +151,8 @@ class ScreenManager(
             Sensor.TYPE_PROXIMITY -> {
                 val maxRange = proximitySensor?.maximumRange ?: 5f
                 val raw = event.values[0]
-                val near = profile.isProximityNear(raw, maxRange, config.proximityThreshold, config.proximityNearHigh)
+                val near = profile.isProximityNear(raw, maxRange, config.proximityThreshold,
+                    config.proximityNearHigh ?: profile.proximityNearHigh)
                 _stats.update {
                     it.copy(
                         proximityNear = near,

@@ -55,7 +55,10 @@ class ConfigPushReceiver : BroadcastReceiver() {
                     if (intent.hasExtra("proximity_near_high"))
                         next = next.copy(
                             manualProximityNearHigh = intent
-                                .getBooleanExtra("proximity_near_high", next.manualProximityNearHigh)
+                                .getBooleanExtra(
+                                    "proximity_near_high",
+                                    next.manualProximityNearHigh ?: true,
+                                )
                         )
                     if (intent.hasExtra("proximity_threshold"))
                         next = next.copy(
