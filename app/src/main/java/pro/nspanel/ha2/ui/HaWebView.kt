@@ -21,11 +21,59 @@ import pro.nspanel.ha2.data.AppSettings
 
 private const val WebViewBackground = "#0D1117"
 
+/** How far down the screen a drag may start and still mean "open settings". */
+private const val TopZoneDp = 72f
+
+/** How far it must travel before it does. */
+private const val TriggerDp = 48f
+
+/**
+ * Watch for a drag down from the top edge without taking the touch away
+ * from the page.
+ *
+ * This used to be a Compose Box overlaid on the WebView, which meant the top
+ * 72dp of the panel was deaf to taps: anything the dashboard drew up there —
+ * the climate sheet's close button, most obviously — could be seen but not
+ * pressed. The listener returns false throughout, so the page still receives
+ * every event and the gesture costs no screen area at all.
+ */
+private fun WebView.trackTouches(
+    onUserInteraction: () -> Unit,
+    onSwipeDownFromTop: () -> Unit,
+) {
+    val density = resources.displayMetrics.density
+    val topZone = TopZoneDp * density
+    val trigger = TriggerDp * density
+    var startY = 0f
+    var armed = false
+    var fired = false
+    setOnTouchListener { _, event ->
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                onUserInteraction()
+                startY = event.y
+                armed = event.y <= topZone
+                fired = false
+            }
+
+            MotionEvent.ACTION_MOVE ->
+                if (armed && !fired && event.y - startY > trigger) {
+                    fired = true
+                    onSwipeDownFromTop()
+                }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> armed = false
+        }
+        false
+    }
+}
+
 @Composable
 fun HaWebView(
     appSettings: AppSettings,
     modifier: Modifier = Modifier,
     onUserInteraction: () -> Unit = {},
+    onSwipeDownFromTop: () -> Unit = {},
     reloadTrigger: Int = 0,
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
@@ -61,21 +109,14 @@ fun HaWebView(
                 applyWebViewDarkMode(settings)
                 webChromeClient = WebChromeClient()
                 webViewClient = WebViewClient()
-                // Notify idle monitor on every touch without consuming the event.
-                setOnTouchListener { _, event ->
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN) onUserInteraction()
-                    false
-                }
+                trackTouches(onUserInteraction, onSwipeDownFromTop)
                 webView = this
             }
         },
         update = { wv ->
             wv.setBackgroundColor(Color.parseColor(WebViewBackground))
             applyWebViewDarkMode(wv.settings)
-            wv.setOnTouchListener { _, event ->
-                if (event.actionMasked == MotionEvent.ACTION_DOWN) onUserInteraction()
-                false
-            }
+            wv.trackTouches(onUserInteraction, onSwipeDownFromTop)
             webView = wv
         },
         modifier = modifier,

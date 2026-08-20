@@ -104,29 +104,36 @@ fun PanelScreen(
             HaWebView(
                 appSettings = settings,
                 onUserInteraction = onUserInteraction,
+                onSwipeDownFromTop = { settingsOpen = true },
                 reloadTrigger = reloadTrigger,
                 modifier = Modifier.fillMaxSize(),
             )
 
-            // Drag zone — swipe down to open settings
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .height(topZone)
-                    .zIndex(2f)
-                    .pointerInput(settingsOpen) {
-                        var totalDrag = 0f
-                        detectVerticalDragGestures(
-                            onDragStart = { totalDrag = 0f },
-                            onVerticalDrag = { _, dragAmount ->
-                                totalDrag += dragAmount
-                                if (!settingsOpen && totalDrag > 48f) settingsOpen = true
-                                else if (settingsOpen && totalDrag < -48f) settingsOpen = false
-                            },
-                        )
-                    },
-            )
+            // Swipe up to put the sheet away. Only while it is open: as a
+            // permanent overlay this was a 72dp band across the top of the
+            // panel that ate every tap meant for the dashboard underneath.
+            // Opening the sheet is handled inside the WebView's own touch
+            // listener now, which watches the same gesture without claiming
+            // the area.
+            if (settingsOpen) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(topZone)
+                        .zIndex(2f)
+                        .pointerInput(Unit) {
+                            var totalDrag = 0f
+                            detectVerticalDragGestures(
+                                onDragStart = { totalDrag = 0f },
+                                onVerticalDrag = { _, dragAmount ->
+                                    totalDrag += dragAmount
+                                    if (totalDrag < -48f) settingsOpen = false
+                                },
+                            )
+                        },
+                )
+            }
 
             // Settings sheet
             AnimatedVisibility(
