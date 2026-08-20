@@ -8,6 +8,14 @@ data class PanelConfig(
     val screenBrightness: Int,
     val screenTimeoutSeconds: Int,
     val proximityWake: Boolean,
+    /**
+     * Reading at which the proximity sensor counts as "someone is there".
+     * 0 keeps the device profile's own figure, which is the right answer on
+     * hardware the profile knows; panels vary enough that a fixed number
+     * cannot serve all of them, and the raw reading is on screen next to this
+     * setting so it can be dialled in by hand.
+     */
+    val proximityThreshold: Float,
     val defaultDashboard: String,
     val idleDimPercent: Int,
     val showStatusBar: Boolean,
@@ -29,6 +37,7 @@ data class PanelConfig(
             screenBrightness = 180,
             screenTimeoutSeconds = 120,
             proximityWake = true,
+            proximityThreshold = 0f,
             defaultDashboard = "/lovelace/default_view",
             idleDimPercent = 40,
             showStatusBar = false,

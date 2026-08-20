@@ -52,6 +52,12 @@ class ConfigPushReceiver : BroadcastReceiver() {
                         next = next.copy(manualTimeoutSeconds = intent.getIntExtra("screen_timeout_seconds", next.manualTimeoutSeconds).coerceAtLeast(0))
                     if (intent.hasExtra("proximity_wake"))
                         next = next.copy(manualProximityWake = intent.getBooleanExtra("proximity_wake", next.manualProximityWake))
+                    if (intent.hasExtra("proximity_threshold"))
+                        next = next.copy(
+                            manualProximityThreshold = intent
+                                .getFloatExtra("proximity_threshold", next.manualProximityThreshold)
+                                .coerceAtLeast(0f)
+                        )
                     if (intent.hasExtra("idle_dim_percent"))
                         next = next.copy(manualIdleDimPercent = intent.getIntExtra("idle_dim_percent", next.manualIdleDimPercent).coerceIn(0, 100))
                     if (intent.hasExtra("show_status_bar"))

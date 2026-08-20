@@ -65,10 +65,12 @@ data class DeviceProfile(
      * it is treated as reflectance, where near means a large value. Distance
      * sensors keep the original "close to zero" test.
      */
-    fun isProximityNear(raw: Float, maxRange: Float): Boolean =
+    fun isProximityNear(raw: Float, maxRange: Float, threshold: Float = 0f): Boolean =
         if (maxRange > 0f && raw > maxRange) {
-            raw > proximityReflectanceNear
+            // Reflectance: near is a *large* reading, so the threshold is a floor.
+            raw > if (threshold > 0f) threshold else proximityReflectanceNear
         } else {
-            raw < maxRange * proximityNearFraction
+            // Distance: near is a *small* reading, so the threshold is a ceiling.
+            raw < if (threshold > 0f) threshold else maxRange * proximityNearFraction
         }
 }

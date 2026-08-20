@@ -30,6 +30,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -409,6 +411,24 @@ fun PanelScreen(
                                 bodySize = bodySize,
                             )
 
+                            // The trigger point, with the live reading beside it.
+                            // The two panel generations report on scales that
+                            // share no units — one counts reflectance in the
+                            // thousands, the other distance in centimetres — so
+                            // the only way to pick a number is to watch what this
+                            // panel actually reports with a hand in front of it.
+                            if (draft.manualProximityWake) {
+                                ProximityThresholdField(
+                                    threshold = draft.manualProximityThreshold,
+                                    onThresholdChange = {
+                                        draft = draft.copy(manualProximityThreshold = it)
+                                    },
+                                    stats = stats,
+                                    bodySize = bodySize,
+                                    captionSize = captionSize,
+                                )
+                            }
+
                             // Show status bar
                             LabeledSwitch(
                                 label = "Show status bar",
@@ -463,6 +483,69 @@ fun PanelScreen(
         }
     }
 }
+
+@Composable
+private fun ProximityThresholdField(
+    threshold: Float,
+    onThresholdChange: (Float) -> Unit,
+    stats: ScreenStats,
+    bodySize: androidx.compose.ui.unit.TextUnit,
+    captionSize: androidx.compose.ui.unit.TextUnit,
+) {
+    // Held as text so a half-typed number survives recomposition; blank means
+    // "use the device profile's figure".
+    var text by remember {
+        mutableStateOf(if (threshold > 0f) trimNumber(threshold) else "")
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { raw ->
+                text = raw.filter { it.isDigit() || it == '.' }.take(8)
+                onThresholdChange(text.toFloatOrNull()?.coerceAtLeast(0f) ?: 0f)
+            },
+            label = { Text("Proximity trigger", fontSize = captionSize) },
+            placeholder = { Text("auto", fontSize = captionSize) },
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(fontSize = bodySize),
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = if (stats.proximityRaw < 0f) "now —"
+                else "now ${trimNumber(stats.proximityRaw)}",
+                fontSize = bodySize,
+                color = if (stats.proximityNear) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            // Extremes since launch, so a hand waved past the panel a minute ago
+            // still tells you the span to choose between.
+            if (!stats.proximityRawMin.isNaN()) {
+                Text(
+                    text = "seen ${trimNumber(stats.proximityRawMin)}–" +
+                        trimNumber(stats.proximityRawMax),
+                    fontSize = captionSize,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = if (stats.proximityNear) "near" else "clear",
+                fontSize = captionSize,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+}
+
+/** 500.0 reads as "500"; 1.25 keeps its decimals. */
+private fun trimNumber(value: Float): String =
+    if (value == value.toLong().toFloat()) value.toLong().toString()
+    else String.format("%.2f", value)
 
 @Composable
 private fun LabeledSlider(

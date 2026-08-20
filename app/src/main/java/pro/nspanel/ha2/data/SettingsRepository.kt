@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -24,6 +25,7 @@ class SettingsRepository(private val context: Context) {
         val brightness = intPreferencesKey("manual_brightness")
         val timeout = intPreferencesKey("manual_timeout_seconds")
         val proximityWake = booleanPreferencesKey("manual_proximity_wake")
+        val proximityThreshold = floatPreferencesKey("manual_proximity_threshold")
         val idleDim = intPreferencesKey("manual_idle_dim_percent")
         val showStatusBar = booleanPreferencesKey("manual_show_status_bar")
         val sensorInterval = intPreferencesKey("manual_sensor_interval_seconds")
@@ -43,6 +45,8 @@ class SettingsRepository(private val context: Context) {
             manualBrightness = prefs[Keys.brightness] ?: PanelConfig.DEFAULT.screenBrightness,
             manualTimeoutSeconds = prefs[Keys.timeout] ?: PanelConfig.DEFAULT.screenTimeoutSeconds,
             manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
+            manualProximityThreshold = prefs[Keys.proximityThreshold]
+                ?: PanelConfig.DEFAULT.proximityThreshold,
             manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
             manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
             manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -64,6 +68,8 @@ class SettingsRepository(private val context: Context) {
                 manualBrightness = prefs[Keys.brightness] ?: PanelConfig.DEFAULT.screenBrightness,
                 manualTimeoutSeconds = prefs[Keys.timeout] ?: PanelConfig.DEFAULT.screenTimeoutSeconds,
                 manualProximityWake = prefs[Keys.proximityWake] ?: PanelConfig.DEFAULT.proximityWake,
+                manualProximityThreshold = prefs[Keys.proximityThreshold]
+                    ?: PanelConfig.DEFAULT.proximityThreshold,
                 manualIdleDimPercent = prefs[Keys.idleDim] ?: PanelConfig.DEFAULT.idleDimPercent,
                 manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
                 manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
@@ -86,6 +92,7 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.brightness] = next.manualBrightness
             prefs[Keys.timeout] = next.manualTimeoutSeconds
             prefs[Keys.proximityWake] = next.manualProximityWake
+            prefs[Keys.proximityThreshold] = next.manualProximityThreshold
             prefs[Keys.idleDim] = next.manualIdleDimPercent
             prefs[Keys.showStatusBar] = next.manualShowStatusBar
             prefs[Keys.sensorInterval] = next.manualSensorIntervalSeconds

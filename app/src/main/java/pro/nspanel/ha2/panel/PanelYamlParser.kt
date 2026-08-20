@@ -32,6 +32,9 @@ object PanelYamlParser {
         boolKey("proximity_wake").find(stripped)?.let { m ->
             c = c.copy(proximityWake = m.groupValues[1].equals("true", ignoreCase = true))
         }
+        numKey("proximity_threshold").find(stripped)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+            c = c.copy(proximityThreshold = it.coerceAtLeast(0f))
+        }
         stringKey("default_dashboard").find(stripped)?.let { m ->
             val v = m.groupValues[1].trim().trim('"', '\'')
             if (v.isNotEmpty()) c = c.copy(defaultDashboard = v)
@@ -73,6 +76,10 @@ object PanelYamlParser {
 
     private fun intKey(key: String) =
         Regex("""^\s*$key:\s*(\d+)\s*$""", RegexOption.MULTILINE)
+
+    /** Like [intKey] but accepts a decimal: proximity readings are floats. */
+    private fun numKey(key: String) =
+        Regex("""^\s*$key:\s*(\d+(?:\.\d+)?)\s*$""", RegexOption.MULTILINE)
 
     private fun boolKey(key: String) =
         Regex("""^\s*$key:\s*(true|false)\s*$""", RegexOption.MULTILINE)
