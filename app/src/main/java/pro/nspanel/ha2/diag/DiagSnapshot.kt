@@ -121,6 +121,8 @@ object DiagSnapshot {
             put("screen_brightness", config.screenBrightness)
             put("screen_timeout_seconds", config.screenTimeoutSeconds)
             put("proximity_wake", config.proximityWake)
+            put("lux_dark", config.luxDark.toDouble())
+            put("lux_bright", config.luxBright.toDouble())
             // Both halves of the trigger, so a panel reporting the wrong side
             // of it can be diagnosed without opening its settings sheet.
             put("proximity_threshold", config.proximityThreshold.toDouble())

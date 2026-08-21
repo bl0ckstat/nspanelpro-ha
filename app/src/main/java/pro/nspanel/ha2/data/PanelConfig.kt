@@ -63,8 +63,12 @@ data class PanelConfig(
             showStatusBar = false,
             sensorReportIntervalSeconds = 30,
             autoBrightness = true,
-            luxDark = 0f,
-            luxBright = 500f,
+            // Wizard-measured in the house these panels serve (panel .46,
+            // 2026-08-21) and adopted as the fleet default: a lived-in room's
+            // night lighting, not a laboratory dark. Individual rooms still
+            // calibrate over the top with the wizard.
+            luxDark = 401f,
+            luxBright = 18341f,
             diagPort = 8377,
             mqttBroker = "",
             mqttTopic = "",
