@@ -78,11 +78,13 @@ fun HaWebView(
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
 
-    LaunchedEffect(reloadTrigger) {
-        if (reloadTrigger > 0) webView?.reload()
-    }
-
-    LaunchedEffect(appSettings.homeAssistantUrl) {
+    // One navigation effect, keyed on the configured URL AND the refresh
+    // counter. Refresh used to call reload(), which re-loads wherever the
+    // single-page app has wandered — after someone taps into a sub-view,
+    // "refresh" cemented them there instead of returning to the configured
+    // dashboard. Now both a changed URL and a refresh land on the URL the
+    // settings actually name.
+    LaunchedEffect(appSettings.homeAssistantUrl, reloadTrigger) {
         val url = appSettings.homeAssistantUrl.trim()
         val wv = webView ?: return@LaunchedEffect
         if (url.isEmpty()) {

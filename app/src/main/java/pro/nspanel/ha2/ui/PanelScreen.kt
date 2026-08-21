@@ -477,6 +477,11 @@ fun PanelScreen(
                             }
                             Button(
                                 onClick = {
+                                    // Refresh keeps the user's edits: pressing
+                                    // it after changing the URL is the most
+                                    // natural gesture there is, and it used to
+                                    // discard the draft without a word.
+                                    viewModel.saveDraft(draft)
                                     reloadTrigger++
                                     settingsOpen = false
                                 },
