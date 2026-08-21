@@ -50,6 +50,9 @@ data class PanelConfig(
     val mqttTopic: String,
     val mqttUsername: String,
     val mqttPassword: String,
+    /** Syslog server for fleet-wide event reporting; blank disables it. */
+    val syslogHost: String,
+    val syslogPort: Int,
 ) {
     companion object {
         val DEFAULT = PanelConfig(
@@ -74,6 +77,8 @@ data class PanelConfig(
             mqttTopic = "",
             mqttUsername = "",
             mqttPassword = "",
+            syslogHost = "",
+            syslogPort = 514,
         )
     }
 }

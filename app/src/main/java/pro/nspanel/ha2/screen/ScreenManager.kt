@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pro.nspanel.ha2.data.PanelConfig
+import pro.nspanel.ha2.diag.SyslogClient
 import pro.nspanel.ha2.device.DeviceProfile
 import kotlin.math.log10
 
@@ -192,7 +193,10 @@ class ScreenManager(
                         proximityTrigger = trigger,
                     )
                 }
-                if (near && config.proximityWake && state != State.AWAKE) wake()
+                if (near && config.proximityWake && state != State.AWAKE) {
+                    SyslogClient.info("wake: proximity raw=${'$'}raw trigger=${'$'}trigger")
+                    wake()
+                }
                 // Presence ended — a true falling edge, not merely an event
                 // that reads far. The first cut of this reset the idle clock
                 // on EVERY far event, and Gen1's reflectance sensor chatters
@@ -223,6 +227,12 @@ class ScreenManager(
     }
 
     private fun setState(next: State) {
+        if (state != next) {
+            SyslogClient.info(
+                "screen ${'$'}{next.name.lowercase()} " +
+                    "(lux=${'$'}{smoothedLux.toInt()} prox=${'$'}{_stats.value.proximityRaw})",
+            )
+        }
         state = next
         _stats.update { it.copy(screenState = next.name) }
     }

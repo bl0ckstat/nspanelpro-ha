@@ -75,6 +75,12 @@ object PanelYamlParser {
             val v = m.groupValues[1].trim().trim('"', '\'')
             if (v.isNotEmpty()) c = c.copy(mqttUsername = v)
         }
+        stringKey("syslog_host").find(stripped)?.let { m ->
+            c = c.copy(syslogHost = m.groupValues[1].trim().trim('"', '\''))
+        }
+        intKey("syslog_port").find(stripped)?.groupValues?.get(1)?.toIntOrNull()?.let {
+            c = c.copy(syslogPort = it.coerceIn(1, 65535))
+        }
         stringKey("mqtt_password").find(stripped)?.let { m ->
             val v = m.groupValues[1].trim().trim('"', '\'')
             if (v.isNotEmpty()) c = c.copy(mqttPassword = v)

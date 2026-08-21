@@ -17,7 +17,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
+import pro.nspanel.ha2.device.NetworkInfo
 import pro.nspanel.ha2.diag.DiagServer
+import pro.nspanel.ha2.diag.SyslogClient
 import pro.nspanel.ha2.diag.DiagState
 import pro.nspanel.ha2.mqtt.MqttManager
 import pro.nspanel.ha2.screen.ScreenManager
@@ -55,6 +57,11 @@ class MainActivity : ComponentActivity() {
                         )
                         DiagState.panelConfig = config
                         diagServer.ensureRunning(config.diagPort)
+                        SyslogClient.configure(
+                            config.syslogHost,
+                            config.syslogPort,
+                            NetworkInfo.read(this@MainActivity).ipAddress,
+                        )
                         if (config.showStatusBar != showStatusBar) {
                             showStatusBar = config.showStatusBar
                             applySystemBars(showStatusBar)

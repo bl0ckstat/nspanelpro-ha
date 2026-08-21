@@ -21,6 +21,8 @@ data class AppSettings(
     val manualMqttTopic: String = "",
     val manualMqttUsername: String = "",
     val manualMqttPassword: String = "",
+    val manualSyslogHost: String = "",
+    val manualSyslogPort: Int = PanelConfig.DEFAULT.syslogPort,
 )
 
 /** Effective panel config when no YAML is loaded (panelYamlUrl blank). */
@@ -42,4 +44,6 @@ fun AppSettings.toManualPanelConfig() = PanelConfig(
     mqttTopic = manualMqttTopic,
     mqttUsername = manualMqttUsername,
     mqttPassword = manualMqttPassword,
+    syslogHost = manualSyslogHost,
+    syslogPort = manualSyslogPort,
 )

@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import pro.nspanel.ha2.diag.SyslogClient
 import pro.nspanel.ha2.sound.SoundPlayer
 
 private const val TAG = "MqttManager"
@@ -99,6 +100,7 @@ class MqttManager(private val soundPlayer: SoundPlayer) {
         } else {
             payload
         }
+        SyslogClient.info("sound: ${'$'}sound")
         soundPlayer.play(sound)
     }
 }

@@ -207,6 +207,19 @@ committed file. `configs/secrets.env` is gitignored; copy
 `configs/secrets.env.example` to it and the deploy tooling substitutes the
 value at push time.
 
+### Syslog (optional)
+
+Set `syslog_host` (and optionally `syslog_port`, default 514) and the panel
+reports its interesting moments — screen state changes with the lux and
+proximity readings that caused them, proximity wakes with the trigger they
+crossed, MQTT connects and losses, sounds played — as RFC 3164 UDP syslog,
+tagged `nspanel-<ip>`, facility local0. Blank host (the default) disables
+it. Telemetry never becomes the fault: send failures log once locally and
+are otherwise swallowed.
+
+A fleet of panels reporting to one syslog/Splunk box turns "did the bedroom
+panel dim overnight?" from an archaeology project into a query.
+
 ## Diagnostics
 
 Every panel serves JSON on `diag_port`:

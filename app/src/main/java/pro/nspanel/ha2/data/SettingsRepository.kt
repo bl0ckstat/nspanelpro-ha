@@ -38,6 +38,8 @@ class SettingsRepository(private val context: Context) {
         val mqttTopic = stringPreferencesKey("manual_mqtt_topic")
         val mqttUsername = stringPreferencesKey("manual_mqtt_username")
         val mqttPassword = stringPreferencesKey("manual_mqtt_password")
+        val syslogHost = stringPreferencesKey("manual_syslog_host")
+        val syslogPort = intPreferencesKey("manual_syslog_port")
     }
 
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
@@ -62,6 +64,8 @@ class SettingsRepository(private val context: Context) {
             manualMqttTopic = prefs[Keys.mqttTopic].orEmpty(),
             manualMqttUsername = prefs[Keys.mqttUsername].orEmpty(),
             manualMqttPassword = prefs[Keys.mqttPassword].orEmpty(),
+            manualSyslogHost = prefs[Keys.syslogHost].orEmpty(),
+            manualSyslogPort = prefs[Keys.syslogPort] ?: PanelConfig.DEFAULT.syslogPort,
         )
     }
 
@@ -93,6 +97,8 @@ class SettingsRepository(private val context: Context) {
                 manualMqttTopic = prefs[Keys.mqttTopic].orEmpty(),
                 manualMqttUsername = prefs[Keys.mqttUsername].orEmpty(),
                 manualMqttPassword = prefs[Keys.mqttPassword].orEmpty(),
+                manualSyslogHost = prefs[Keys.syslogHost].orEmpty(),
+                manualSyslogPort = prefs[Keys.syslogPort] ?: PanelConfig.DEFAULT.syslogPort,
             )
             val next = transform(current)
             prefs[Keys.haUrl] = next.homeAssistantUrl
@@ -115,6 +121,8 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.mqttTopic] = next.manualMqttTopic
             prefs[Keys.mqttUsername] = next.manualMqttUsername
             prefs[Keys.mqttPassword] = next.manualMqttPassword
+            prefs[Keys.syslogHost] = next.manualSyslogHost
+            prefs[Keys.syslogPort] = next.manualSyslogPort
         }
     }
 }

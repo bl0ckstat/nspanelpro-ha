@@ -88,6 +88,15 @@ class ConfigPushReceiver : BroadcastReceiver() {
                     intent.getStringExtra("mqtt_broker")?.let { next = next.copy(manualMqttBroker = it) }
                     intent.getStringExtra("mqtt_topic")?.let { next = next.copy(manualMqttTopic = it) }
                     intent.getStringExtra("mqtt_username")?.let { next = next.copy(manualMqttUsername = it) }
+                    intent.getStringExtra("syslog_host")?.let {
+                        next = next.copy(manualSyslogHost = it.trim())
+                    }
+                    if (intent.hasExtra("syslog_port"))
+                        next = next.copy(
+                            manualSyslogPort = intent
+                                .getIntExtra("syslog_port", next.manualSyslogPort)
+                                .coerceIn(1, 65535)
+                        )
                     intent.getStringExtra("mqtt_password")?.let { next = next.copy(manualMqttPassword = it) }
                     yamlUrl?.let { next = next.copy(panelYamlUrl = it) }
                     yamlBody?.let { next = next.copy(lastPanelYamlRaw = it) }
