@@ -58,6 +58,14 @@ import kotlin.math.sqrt
  *  - the sensors read out live on every screen, so a hand waved at the panel
  *    visibly moves the number it is about to calibrate.
  */
+/**
+ * What the presence measurement concluded. DEAD and LOCKED are hardware
+ * verdicts, not calibration failures: a sensor that reports nothing, or
+ * reports the same figure with a person in front of it as without, will not
+ * be fixed by standing somewhere else — and the honest thing is to say so.
+ */
+private enum class ProxVerdict { OK, MARGINAL, TOO_CLOSE, DEAD, LOCKED }
+
 private enum class Step {
     INTRO,
     PROX_CLEAR,
@@ -99,11 +107,12 @@ fun CalibrationWizard(
     var draft by remember { mutableStateOf(settings) }
 
     var restPeak by remember { mutableStateOf(Float.NaN) }
+    var restMinSeen by remember { mutableStateOf(Float.NaN) }
     var restSpread by remember { mutableStateOf(0f) }
-    var proxMarginal by remember { mutableStateOf(false) }
+    var restCount by remember { mutableStateOf(0) }
     var nearTypical by remember { mutableStateOf(Float.NaN) }
     var proxThreshold by remember { mutableStateOf(Float.NaN) }
-    var proxFailed by remember { mutableStateOf(false) }
+    var verdict by remember { mutableStateOf(ProxVerdict.OK) }
     var luxBright by remember { mutableStateOf(Float.NaN) }
     var luxDark by remember { mutableStateOf(Float.NaN) }
     var progress by remember { mutableStateOf(0f) }
@@ -140,33 +149,44 @@ fun CalibrationWizard(
             Step.PROX_CLEAR -> {
                 val rest = sample(8, 10) { it.proximityRaw }
                 restPeak = rest.maxOrNull() ?: Float.NaN
+                restMinSeen = rest.minOrNull() ?: Float.NaN
                 restSpread = if (rest.isEmpty()) 0f else (restPeak - rest.min())
+                restCount = rest.size
                 step = Step.PROX_NEAR_READY
             }
             Step.PROX_NEAR -> {
                 // The typical reading at wake distance, not the peak: the peak
                 // is whatever moment the hand drifted closest, and a trigger
                 // set off that wakes only on touch.
-                nearTypical = median(sample(5, 8) { it.proximityRaw })
+                val near = sample(5, 8) { it.proximityRaw }
+                nearTypical = median(near)
+                val allMin = listOfNotNull(
+                    restMinSeen.takeIf { !it.isNaN() }, near.minOrNull()).minOrNull()
+                val allMax = listOfNotNull(
+                    restPeak.takeIf { !it.isNaN() }, near.maxOrNull()).maxOrNull()
                 // Separation is judged against the rest band's own spread, not
                 // a fixed multiple: a rock-steady 32–33 is distinguishable
                 // from 42 with a few counts of clearance, while a band that
                 // jitters across 30 counts needs to be cleared by that much.
-                // The fixed 1.5x bar ejected exactly the calm sensors that
-                // deserve the finest margins.
                 val margin = maxOf(6f, restSpread * 1.5f)
-                proxFailed = when {
-                    radar -> false
-                    nearTypical.isNaN() || restPeak.isNaN() -> true
-                    nearTypical < restPeak + margin -> true
-                    else -> false
+                verdict = when {
+                    // Nothing arrived in either phase: the sensor never spoke.
+                    restCount == 0 && near.isEmpty() -> ProxVerdict.DEAD
+                    // It spoke, but the figure with a person in front of it is
+                    // the figure of an empty room, to the count, through both
+                    // phases: the output is locked, not miscalibrated.
+                    allMin != null && allMax != null &&
+                        (allMax - allMin) < 0.5f -> ProxVerdict.LOCKED
+                    radar -> ProxVerdict.OK
+                    nearTypical.isNaN() || restPeak.isNaN() -> ProxVerdict.TOO_CLOSE
+                    nearTypical < restPeak + margin -> ProxVerdict.TOO_CLOSE
+                    // Clearly separated but by little — accept, warn, and let
+                    // the user decide: an occasional false wake is cheaper
+                    // than refusing the distance they actually want.
+                    nearTypical < restPeak * 1.5f -> ProxVerdict.MARGINAL
+                    else -> ProxVerdict.OK
                 }
-                // Clearly separated but by little — accept it, say so, and
-                // let the user decide: an occasional false wake is cheaper than a
-                // wizard that refuses the distance the user actually wants.
-                proxMarginal = !proxFailed && !radar &&
-                    nearTypical < restPeak * 1.5f
-                if (!proxFailed && !radar) {
+                if ((verdict == ProxVerdict.OK || verdict == ProxVerdict.MARGINAL) && !radar) {
                     // Geometric midpoint, floored just above the rest band so
                     // a tight pair cannot place the trigger inside the noise.
                     proxThreshold = maxOf(
@@ -282,14 +302,42 @@ fun CalibrationWizard(
                     countdown, progress,
                 )
 
-                Step.PROX_RESULT -> {
-                    if (radar) {
+                Step.PROX_RESULT -> when (verdict) {
+                    ProxVerdict.DEAD, ProxVerdict.LOCKED -> {
                         Body(
-                            "This panel has a presence radar: it reports " +
-                                "someone-there or empty on its own. Nothing to " +
-                                "tune here."
+                            if (verdict == ProxVerdict.DEAD)
+                                "The proximity sensor reported nothing at all — " +
+                                    "not while the room was empty, not while you " +
+                                    "stood in front of it."
+                            else
+                                "The proximity sensor's output looks locked: it " +
+                                    "read ${restPeak.roundToInt()} with the room " +
+                                    "empty and exactly the same with you in front " +
+                                    "of it.",
+                            color = Brass,
                         )
-                    } else if (proxFailed) {
+                        Body(
+                            "That's a hardware fault, not a calibration problem — " +
+                                "standing elsewhere won't change it. If a retry " +
+                                "does the same, this panel's sensor is gone and " +
+                                "the panel is a candidate for replacement. You " +
+                                "can carry on without proximity wake meanwhile.",
+                            size = DETAIL,
+                            color = Muted,
+                        )
+                        BigButton("Retry — step away again") { step = Step.PROX_CLEAR }
+                        OutlinedButton(onClick = {
+                            draft = draft.copy(manualProximityWake = false)
+                            step = Step.LUX_BRIGHT_READY
+                        }) {
+                            Text(
+                                "Continue without proximity wake",
+                                fontSize = DETAIL,
+                                color = Muted,
+                            )
+                        }
+                    }
+                    ProxVerdict.TOO_CLOSE -> {
                         Body(
                             "Couldn't tell you apart from the empty room " +
                                 "(empty read up to ${restPeak.roundToInt()} with noise of " +
@@ -299,23 +347,30 @@ fun CalibrationWizard(
                             color = Brass,
                         )
                         BigButton("Retry — step away again") { step = Step.PROX_CLEAR }
-                    } else {
-                        ResultCard(
-                            "Empty room" to "${restPeak.roundToInt()}",
-                            "You, at wake distance" to "${nearTypical.roundToInt()}",
-                            "Trigger set to" to "${proxThreshold.roundToInt()}",
-                        )
-                        if (proxMarginal) {
-                            Body(
-                                "The margin is small, so the panel may " +
-                                    "occasionally wake on its own. If it does, " +
-                                    "re-run this standing a little closer.",
-                                size = DETAIL,
-                                color = Brass,
-                            )
-                        }
                     }
-                    if (!proxFailed) {
+                    else -> {
+                        if (radar) {
+                            Body(
+                                "This panel has a presence radar: it reports " +
+                                    "someone-there or empty on its own. Nothing to " +
+                                    "tune here."
+                            )
+                        } else {
+                            ResultCard(
+                                "Empty room" to "${restPeak.roundToInt()}",
+                                "You, at wake distance" to "${nearTypical.roundToInt()}",
+                                "Trigger set to" to "${proxThreshold.roundToInt()}",
+                            )
+                            if (verdict == ProxVerdict.MARGINAL) {
+                                Body(
+                                    "The margin is small, so the panel may " +
+                                        "occasionally wake on its own. If it does, " +
+                                        "re-run this standing a little closer.",
+                                    size = DETAIL,
+                                    color = Brass,
+                                )
+                            }
+                        }
                         BigButton("Next: room brightness") { step = Step.LUX_BRIGHT_READY }
                     }
                 }
@@ -352,13 +407,26 @@ fun CalibrationWizard(
 
                 Step.DIMMING -> {
                     if (luxBright.isNaN() || luxDark.isNaN() || luxBright <= luxDark * 1.2f) {
-                        Body(
-                            "Bright and dark read too close together " +
-                                "(${if (luxBright.isNaN()) "?" else luxBright.roundToInt().toString()} vs " +
-                                "${if (luxDark.isNaN()) "?" else luxDark.roundToInt().toString()} lux) — " +
-                                "brightness anchors left unchanged.",
-                            color = Brass,
-                        )
+                        if (!luxBright.isNaN() && !luxDark.isNaN() &&
+                            kotlin.math.abs(luxBright - luxDark) < 1f
+                        ) {
+                            Body(
+                                "The light sensor read exactly the same in a " +
+                                    "bright room as a dark one (${luxBright.roundToInt()} lx) — " +
+                                    "its output looks stuck. If a retry does the " +
+                                    "same, that's a hardware fault; auto-brightness " +
+                                    "won't work on this panel until it's replaced.",
+                                color = Brass,
+                            )
+                        } else {
+                            Body(
+                                "Bright and dark read too close together " +
+                                    "(${if (luxBright.isNaN()) "?" else luxBright.roundToInt().toString()} vs " +
+                                    "${if (luxDark.isNaN()) "?" else luxDark.roundToInt().toString()} lux) — " +
+                                    "brightness anchors left unchanged.",
+                                color = Brass,
+                            )
+                        }
                         OutlinedButton(onClick = { step = Step.LUX_BRIGHT_READY }) {
                             Text("Retry lighting", fontSize = DETAIL, color = Muted)
                         }
