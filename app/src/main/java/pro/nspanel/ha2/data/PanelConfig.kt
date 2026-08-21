@@ -31,6 +31,15 @@ data class PanelConfig(
     val showStatusBar: Boolean,
     val sensorReportIntervalSeconds: Int,
     val autoBrightness: Boolean,
+    /**
+     * The lux readings the auto-brightness curve is anchored to: at or below
+     * [luxDark] the screen sits at its dimmest awake level, at or above
+     * [luxBright] it runs full. The old fixed curve pinned full at 500 lux;
+     * rooms here read 27000 in daylight and 150 at night lighting, so the
+     * anchors are per-panel and the calibration wizard measures them.
+     */
+    val luxDark: Float,
+    val luxBright: Float,
     /** TCP port for the diagnostics HTTP endpoint; 0 disables the server. */
     val diagPort: Int,
     /** Broker the panel subscribes to for sound commands, e.g. the doorbell
@@ -54,6 +63,8 @@ data class PanelConfig(
             showStatusBar = false,
             sensorReportIntervalSeconds = 30,
             autoBrightness = true,
+            luxDark = 0f,
+            luxBright = 500f,
             diagPort = 8377,
             mqttBroker = "",
             mqttTopic = "",

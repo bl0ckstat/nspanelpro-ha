@@ -32,6 +32,12 @@ object PanelYamlParser {
         boolKey("proximity_wake").find(stripped)?.let { m ->
             c = c.copy(proximityWake = m.groupValues[1].equals("true", ignoreCase = true))
         }
+        numKey("lux_dark").find(stripped)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+            c = c.copy(luxDark = it.coerceAtLeast(0f))
+        }
+        numKey("lux_bright").find(stripped)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+            c = c.copy(luxBright = it.coerceAtLeast(1f))
+        }
         numKey("proximity_threshold").find(stripped)?.groupValues?.get(1)?.toFloatOrNull()?.let {
             c = c.copy(proximityThreshold = it.coerceAtLeast(0f))
         }

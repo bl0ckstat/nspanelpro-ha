@@ -65,6 +65,10 @@ class ConfigPushReceiver : BroadcastReceiver() {
                             }
                         )
                     }
+                    if (intent.hasExtra("lux_dark"))
+                        next = next.copy(manualLuxDark = intent.getFloatExtra("lux_dark", next.manualLuxDark).coerceAtLeast(0f))
+                    if (intent.hasExtra("lux_bright"))
+                        next = next.copy(manualLuxBright = intent.getFloatExtra("lux_bright", next.manualLuxBright).coerceAtLeast(1f))
                     if (intent.hasExtra("proximity_threshold"))
                         next = next.copy(
                             manualProximityThreshold = intent

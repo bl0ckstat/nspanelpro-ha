@@ -75,6 +75,7 @@ fun PanelScreen(
     val panelConfig by viewModel.panelConfig.collectAsStateWithLifecycle()
     var settingsOpen by remember { mutableStateOf(false) }
     var diagnosticsOpen by remember { mutableStateOf(false) }
+    var wizardOpen by remember { mutableStateOf(false) }
     var draft by remember(settings) { mutableStateOf(settings) }
     var reloadTrigger by remember { mutableStateOf(0) }
     var yamlError by remember { mutableStateOf<String?>(null) }
@@ -135,6 +136,20 @@ fun PanelScreen(
                             )
                         },
                 )
+            }
+
+            if (wizardOpen) {
+                Box(modifier = Modifier.fillMaxSize().zIndex(6f)) {
+                    CalibrationWizard(
+                        statsFlow = screenStats ?: MutableStateFlow(ScreenStats()),
+                        settings = draft,
+                        onApply = { updated ->
+                            draft = updated
+                            viewModel.saveDraft(updated)
+                        },
+                        onClose = { wizardOpen = false },
+                    )
+                }
             }
 
             // Settings sheet
@@ -225,6 +240,12 @@ fun PanelScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Diagnostics & Android settings", fontSize = bodySize)
+                        }
+                        OutlinedButton(
+                            onClick = { wizardOpen = true },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Calibration wizard", fontSize = bodySize)
                         }
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -535,6 +556,13 @@ private fun ProximityThresholdField(
                 Text(
                     text = "seen ${trimNumber(stats.proximityRawMin)}–" +
                         trimNumber(stats.proximityRawMax),
+                    fontSize = captionSize,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (!stats.proximityTrigger.isNaN()) {
+                Text(
+                    text = "trigger ${trimNumber(stats.proximityTrigger)}",
                     fontSize = captionSize,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

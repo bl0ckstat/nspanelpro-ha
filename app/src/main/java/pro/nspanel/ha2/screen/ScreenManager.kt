@@ -60,6 +60,8 @@ class ScreenManager(
     private var config = PanelConfig.DEFAULT
     private var running = false
     private var smoothedLux = 100f
+    private var proximityBaseline = Float.NaN
+    private var lastNear = false
 
     private val _stats = MutableStateFlow(
         ScreenStats(
@@ -131,16 +133,30 @@ class ScreenManager(
         scope.cancel()
     }
 
+    /**
+     * The trigger actually in force: an explicit config threshold wins; the
+     * reflectance generations get one derived from this panel's own resting
+     * level (2.5x, floored at +40 counts so a very dark room cannot produce
+     * a hair trigger); the radar keeps its fixed midpoint.
+     */
+    private fun effectiveTrigger(maxRange: Float): Float {
+        if (config.proximityThreshold > 0f) return config.proximityThreshold
+        val nearHigh = config.proximityNearHigh ?: profile.proximityNearHigh
+        if (!nearHigh) return maxRange * 0.5f
+        if (profile.generation == pro.nspanel.ha2.device.PanelGeneration.GEN2) {
+            return profile.proximityDefaultTrigger
+        }
+        if (proximityBaseline.isNaN()) return profile.proximityDefaultTrigger
+        return maxOf(proximityBaseline * 2.5f, proximityBaseline + 40f)
+    }
+
     /** Recompute "near" from the reading already in hand. */
     private fun reevaluateProximity() {
         val last = _stats.value
         if (last.proximityRaw < 0f) return
-        val near = profile.isProximityNear(
-            last.proximityRaw,
-            last.proximityMaxRange,
-            config.proximityThreshold,
-            config.proximityNearHigh ?: profile.proximityNearHigh,
-        )
+        val trigger = effectiveTrigger(last.proximityMaxRange)
+        val nearHigh = config.proximityNearHigh ?: profile.proximityNearHigh
+        val near = if (nearHigh) last.proximityRaw > trigger else last.proximityRaw < trigger
         if (near != last.proximityNear) _stats.update { it.copy(proximityNear = near) }
     }
 
@@ -151,8 +167,18 @@ class ScreenManager(
             Sensor.TYPE_PROXIMITY -> {
                 val maxRange = proximitySensor?.maximumRange ?: 5f
                 val raw = event.values[0]
-                val near = profile.isProximityNear(raw, maxRange, config.proximityThreshold,
-                    config.proximityNearHigh ?: profile.proximityNearHigh)
+                // Resting-level tracker: snaps down to any lower reading and
+                // drifts up only slowly, so a hand in front never teaches it
+                // a false floor but ambient IR shifting over the day does
+                // move it. Panels rest anywhere from ~15 to ~170 counts, so
+                // no fixed trigger can serve the fleet.
+                proximityBaseline = when {
+                    proximityBaseline.isNaN() || raw < proximityBaseline -> raw
+                    else -> proximityBaseline + (raw - proximityBaseline) * 0.002f
+                }
+                val trigger = effectiveTrigger(maxRange)
+                val nearHigh = config.proximityNearHigh ?: profile.proximityNearHigh
+                val near = if (nearHigh) raw > trigger else raw < trigger
                 _stats.update {
                     it.copy(
                         proximityNear = near,
@@ -162,12 +188,21 @@ class ScreenManager(
                             else minOf(it.proximityRawMin, raw),
                         proximityRawMax = if (it.proximityRawMax.isNaN()) raw
                             else maxOf(it.proximityRawMax, raw),
+                        proximityBaseline = proximityBaseline,
+                        proximityTrigger = trigger,
                     )
                 }
                 if (near && config.proximityWake && state != State.AWAKE) wake()
-                // Presence ended: the room just emptied, so the idle clock
-                // starts now, not back at the last touch.
-                if (!near && config.proximityWake && state == State.AWAKE) rescheduleIdle()
+                // Presence ended — a true falling edge, not merely an event
+                // that reads far. The first cut of this reset the idle clock
+                // on EVERY far event, and Gen1's reflectance sensor chatters
+                // every few seconds, so no panel with one could ever dim: the
+                // fleet burned bright all night. Edge-detected, it means what
+                // it was meant to mean: the room just emptied, count from now.
+                if (!near && lastNear && config.proximityWake && state == State.AWAKE) {
+                    rescheduleIdle()
+                }
+                lastNear = near
             }
             Sensor.TYPE_LIGHT -> {
                 smoothedLux = smoothedLux * (1f - LUX_EMA_ALPHA) + event.values[0] * LUX_EMA_ALPHA
@@ -219,7 +254,8 @@ class ScreenManager(
     private fun awakeBrightness(): Float {
         val maxFraction = config.screenBrightness / 255f
         return if (config.autoBrightness) {
-            (maxFraction * luxToFactor(smoothedLux)).coerceIn(profile.minBrightness, maxFraction)
+            (maxFraction * luxToFactor(smoothedLux, config.luxDark, config.luxBright))
+                .coerceIn(profile.minBrightness, maxFraction)
         } else {
             maxFraction.coerceAtLeast(profile.minBrightness)
         }
@@ -255,10 +291,14 @@ class ScreenManager(
         const val LUX_FULL = 500f
         const val MIN_AUTO_FACTOR = 0.12f
 
-        fun luxToFactor(lux: Float): Float {
-            if (lux <= 0f) return MIN_AUTO_FACTOR
-            return (log10(lux + 1.0) / log10(LUX_FULL + 1.0)).toFloat()
-                .coerceIn(MIN_AUTO_FACTOR, 1.0f)
+        /** Log-interpolated between the panel's calibrated anchors: at or
+         *  below [dark] the dimmest awake level, at or above [bright] full.
+         *  The defaults reproduce the old fixed curve. */
+        fun luxToFactor(lux: Float, dark: Float = 0f, bright: Float = LUX_FULL): Float {
+            val lo = log10(dark.coerceAtLeast(0f) + 1.0)
+            val hi = log10(bright.coerceAtLeast(dark + 1f) + 1.0)
+            val v = (log10(lux.coerceAtLeast(0f) + 1.0) - lo) / (hi - lo)
+            return v.toFloat().coerceIn(MIN_AUTO_FACTOR, 1.0f)
         }
     }
 }

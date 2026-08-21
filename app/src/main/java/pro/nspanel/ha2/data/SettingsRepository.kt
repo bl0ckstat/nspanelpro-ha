@@ -31,6 +31,8 @@ class SettingsRepository(private val context: Context) {
         val showStatusBar = booleanPreferencesKey("manual_show_status_bar")
         val sensorInterval = intPreferencesKey("manual_sensor_interval_seconds")
         val autoBrightness = booleanPreferencesKey("manual_auto_brightness")
+        val luxDark = floatPreferencesKey("manual_lux_dark")
+        val luxBright = floatPreferencesKey("manual_lux_bright")
         val diagPort = intPreferencesKey("manual_diag_port")
         val mqttBroker = stringPreferencesKey("manual_mqtt_broker")
         val mqttTopic = stringPreferencesKey("manual_mqtt_topic")
@@ -53,6 +55,8 @@ class SettingsRepository(private val context: Context) {
             manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
             manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
             manualAutoBrightness = prefs[Keys.autoBrightness] ?: PanelConfig.DEFAULT.autoBrightness,
+            manualLuxDark = prefs[Keys.luxDark] ?: PanelConfig.DEFAULT.luxDark,
+            manualLuxBright = prefs[Keys.luxBright] ?: PanelConfig.DEFAULT.luxBright,
             manualDiagPort = prefs[Keys.diagPort] ?: PanelConfig.DEFAULT.diagPort,
             manualMqttBroker = prefs[Keys.mqttBroker].orEmpty(),
             manualMqttTopic = prefs[Keys.mqttTopic].orEmpty(),
@@ -77,6 +81,8 @@ class SettingsRepository(private val context: Context) {
                 manualShowStatusBar = prefs[Keys.showStatusBar] ?: PanelConfig.DEFAULT.showStatusBar,
                 manualSensorIntervalSeconds = prefs[Keys.sensorInterval] ?: PanelConfig.DEFAULT.sensorReportIntervalSeconds,
                 manualAutoBrightness = prefs[Keys.autoBrightness] ?: PanelConfig.DEFAULT.autoBrightness,
+                manualLuxDark = prefs[Keys.luxDark] ?: PanelConfig.DEFAULT.luxDark,
+                manualLuxBright = prefs[Keys.luxBright] ?: PanelConfig.DEFAULT.luxBright,
                 // Every stored key has to be read back here, not just the ones
                 // a caller is likely to change: `current` is written out whole
                 // below, so anything missed is silently reset to its default.
@@ -102,6 +108,8 @@ class SettingsRepository(private val context: Context) {
             prefs[Keys.showStatusBar] = next.manualShowStatusBar
             prefs[Keys.sensorInterval] = next.manualSensorIntervalSeconds
             prefs[Keys.autoBrightness] = next.manualAutoBrightness
+            prefs[Keys.luxDark] = next.manualLuxDark
+            prefs[Keys.luxBright] = next.manualLuxBright
             prefs[Keys.diagPort] = next.manualDiagPort
             prefs[Keys.mqttBroker] = next.manualMqttBroker
             prefs[Keys.mqttTopic] = next.manualMqttTopic

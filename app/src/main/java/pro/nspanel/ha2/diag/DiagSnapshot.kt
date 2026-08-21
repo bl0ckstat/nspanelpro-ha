@@ -55,6 +55,16 @@ object DiagSnapshot {
                     else stats.proximityRawMin.toDouble(),
                 )
                 put(
+                    "proximity_baseline",
+                    if (stats.proximityBaseline.isNaN()) JSONObject.NULL
+                    else stats.proximityBaseline.toDouble(),
+                )
+                put(
+                    "proximity_trigger",
+                    if (stats.proximityTrigger.isNaN()) JSONObject.NULL
+                    else stats.proximityTrigger.toDouble(),
+                )
+                put(
                     "proximity_raw_max",
                     if (stats.proximityRawMax.isNaN()) JSONObject.NULL
                     else stats.proximityRawMax.toDouble(),

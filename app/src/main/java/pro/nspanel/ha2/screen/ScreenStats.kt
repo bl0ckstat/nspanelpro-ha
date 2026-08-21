@@ -14,6 +14,10 @@ data class ScreenStats(
      *  trace here, so calibration doesn't depend on watching at the right moment. */
     val proximityRawMin: Float = Float.NaN,
     val proximityRawMax: Float = Float.NaN,
+    /** The resting-level estimate the adaptive trigger is derived from, and
+     *  the trigger itself — surfaced so calibration is observable. */
+    val proximityBaseline: Float = Float.NaN,
+    val proximityTrigger: Float = Float.NaN,
     val canWriteSettings: Boolean = false,
     val deviceModel: String = "",
     val generation: PanelGeneration = PanelGeneration.UNKNOWN,
