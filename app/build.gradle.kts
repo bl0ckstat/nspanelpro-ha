@@ -22,8 +22,8 @@ android {
         applicationId = "pro.nspanel.ha2"
         minSdk = 26
         targetSdk = 35
-        versionCode = 24
-        versionName = "0.5.18"
+        versionCode = 25
+        versionName = "0.5.19"
     }
 
     signingConfigs {

@@ -11,6 +11,7 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Fire-and-forget syslog over UDP (RFC 3164 framing, local0 facility), so a
@@ -31,7 +32,13 @@ object SyslogClient {
     @Volatile private var warned = false
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val stamp = SimpleDateFormat("MMM d HH:mm:ss", Locale.US)
+    // RFC 3164 timestamps carry no zone, so the receiver assumes its own —
+    // and the receiver here runs UTC while the panels run local. Stamping
+    // local time indexed every event eight hours in the future, where no
+    // "last 24 hours" search would ever look. The wire speaks UTC.
+    private val stamp = SimpleDateFormat("MMM d HH:mm:ss", Locale.US).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
 
     fun configure(newHost: String, newPort: Int, panelIp: String?) {
         val changed = newHost.trim() != host || newPort != port
