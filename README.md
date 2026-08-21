@@ -54,18 +54,48 @@ pick up Home Assistant's automatic dark theme. Set a theme per view instead.
 
 ## Installing
 
-Download `app-release.apk` from the latest release and:
+### 1. Put the panel in developer mode
+
+The panel needs ADB over the network, which Sonoff hides behind a developer
+toggle in the eWeLink app. Enabling it is a one-time step per panel —
+[Blakadder's sideloading guide](https://blakadder.com/nspanel-pro-sideload/)
+walks through it (in short: eWeLink → device settings → tap **Device ID**
+repeatedly until Developer Options appears, then enable ADB). Note the
+warning in that guide: accepting the ADB agreement takes the panel off
+Sonoff's official update path — which is rather the point here.
+
+### 2. Install the app
+
+Download `app-release.apk` from the latest release, then from any machine on
+the same network:
 
 ```sh
-adb connect <panel-ip>:5555
-adb install -r app-release.apk
+PANEL=192.168.2.x        # your panel's IP
+
+adb connect $PANEL:5555
+
+# Retire anything that will fight for the screen. The stock control panel
+# keeps itself resumed on a factory-fresh unit, which leaves whatever you
+# install running behind it. It is a system app, so it disables rather
+# than uninstalls.
+adb -s $PANEL:5555 shell pm disable-user --user 0 com.eWeLinkControlPanel
+
+# Install, grant the two permissions the app needs (hardware brightness
+# and boot-launch), and make it the home screen.
+adb -s $PANEL:5555 install -r app-release.apk
+adb -s $PANEL:5555 shell appops set pro.nspanel.ha2 WRITE_SETTINGS allow
+adb -s $PANEL:5555 shell appops set pro.nspanel.ha2 SYSTEM_ALERT_WINDOW allow
+adb -s $PANEL:5555 shell cmd package set-home-activity pro.nspanel.ha2/.MainActivity
+
+# Point it at your Home Assistant.
+adb -s $PANEL:5555 shell am broadcast -a pro.nspanel.ha2.PUSH_CONFIG \
+    -n pro.nspanel.ha2/.ConfigPushReceiver \
+    --es ha_url "http://homeassistant.local:8123/your-dashboard/0"
 ```
 
-Then set it as home — the app asks on first launch, or:
-
-```sh
-adb shell cmd package set-home-activity pro.nspanel.ha2/.MainActivity
-```
+> **Leave `com.eWeLinkNSPro.dev` alone.** It looks like vendor bloat; it is
+> the panel's network stack. Disabling it takes the panel off the network
+> entirely and the only way back is a factory reset. Learned the hard way.
 
 Building from source needs a `keystore.properties` beside `settings.gradle.kts`
 (see `keystore.properties.example`) and `./gradlew assembleRelease`.
@@ -75,6 +105,35 @@ Building from source needs a `keystore.properties` beside `settings.gradle.kts`
 > stored configuration — `ha_url` included, which leaves the panel on a blank
 > screen until something pushes it back. Keep the key you started with, or plan
 > to re-push config to every panel afterwards.
+
+## The calibration wizard
+
+Swipe down from the top of the screen and choose **Calibration wizard**. It
+tunes the two things no shipped default can know — where the proximity
+trigger sits on *this* panel's sensor, and what "bright" and "dark" mean in
+*this* room — by asking you to do things and measuring while you do them:
+
+1. **Step away** — measures the empty room's proximity reading.
+2. **Stand at wake distance** — measures you where you want the panel to
+   wake, and sets the trigger between the two. If the two readings are
+   close, it says so and lets you decide; if the sensor reports nothing, or
+   reads exactly the same with you there as without, it tells you plainly
+   that the sensor is faulty rather than sending you on calibration errands
+   that cannot succeed.
+3. **Room bright, then room dark** — measures the lux at both, anchoring
+   auto-brightness to the room's real range. The screen goes almost black
+   during the dark measurement so its own glow doesn't pollute the reading.
+4. **Dimming** — idle timeout and dim-level sliders, then a summary and
+   Apply.
+
+Every measuring step waits for a button press and counts down before
+sampling, so you have time to get where the step needs you. Both sensors
+read out live on every screen — wave a hand and watch the number move.
+Everything the wizard writes lands in the ordinary settings, so results are
+tunable by hand afterwards, and the wizard can be re-run whenever the room
+or the furniture changes. Gen2 panels have a presence radar instead of a
+reflectance sensor; the wizard explains there is nothing to tune for wake
+distance on those and calibrates the rest.
 
 ## Configuring
 
