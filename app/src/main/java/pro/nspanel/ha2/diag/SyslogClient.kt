@@ -37,7 +37,7 @@ object SyslogClient {
         val changed = newHost.trim() != host || newPort != port
         host = newHost.trim()
         port = newPort
-        tag = "nspanel-${panelIp ?: "unknown"}"
+        tag = "nspanel-" + (panelIp?.substringBefore('/') ?: "unknown")
         warned = false
         if (changed && host.isNotEmpty()) info("syslog: reporting to $host:$port")
     }

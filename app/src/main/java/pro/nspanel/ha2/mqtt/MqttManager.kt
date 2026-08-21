@@ -100,7 +100,7 @@ class MqttManager(private val soundPlayer: SoundPlayer) {
         } else {
             payload
         }
-        SyslogClient.info("sound: ${'$'}sound")
+        SyslogClient.info("sound: " + sound)
         soundPlayer.play(sound)
     }
 }

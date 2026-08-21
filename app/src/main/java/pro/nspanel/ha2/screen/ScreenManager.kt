@@ -194,7 +194,7 @@ class ScreenManager(
                     )
                 }
                 if (near && config.proximityWake && state != State.AWAKE) {
-                    SyslogClient.info("wake: proximity raw=${'$'}raw trigger=${'$'}trigger")
+                    SyslogClient.info("wake: proximity raw=" + raw + " trigger=" + trigger)
                     wake()
                 }
                 // Presence ended — a true falling edge, not merely an event
@@ -229,8 +229,9 @@ class ScreenManager(
     private fun setState(next: State) {
         if (state != next) {
             SyslogClient.info(
-                "screen ${'$'}{next.name.lowercase()} " +
-                    "(lux=${'$'}{smoothedLux.toInt()} prox=${'$'}{_stats.value.proximityRaw})",
+                "screen " + next.name.lowercase() +
+                    " (lux=" + smoothedLux.toInt() +
+                    " prox=" + _stats.value.proximityRaw + ")",
             )
         }
         state = next
