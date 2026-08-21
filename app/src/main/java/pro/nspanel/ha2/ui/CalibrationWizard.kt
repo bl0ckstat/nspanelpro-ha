@@ -99,6 +99,8 @@ fun CalibrationWizard(
     var draft by remember { mutableStateOf(settings) }
 
     var restPeak by remember { mutableStateOf(Float.NaN) }
+    var restSpread by remember { mutableStateOf(0f) }
+    var proxMarginal by remember { mutableStateOf(false) }
     var nearTypical by remember { mutableStateOf(Float.NaN) }
     var proxThreshold by remember { mutableStateOf(Float.NaN) }
     var proxFailed by remember { mutableStateOf(false) }
@@ -136,7 +138,9 @@ fun CalibrationWizard(
         progress = 0f
         when (step) {
             Step.PROX_CLEAR -> {
-                restPeak = sample(8, 10) { it.proximityRaw }.maxOrNull() ?: Float.NaN
+                val rest = sample(8, 10) { it.proximityRaw }
+                restPeak = rest.maxOrNull() ?: Float.NaN
+                restSpread = if (rest.isEmpty()) 0f else (restPeak - rest.min())
                 step = Step.PROX_NEAR_READY
             }
             Step.PROX_NEAR -> {
@@ -144,16 +148,31 @@ fun CalibrationWizard(
                 // is whatever moment the hand drifted closest, and a trigger
                 // set off that wakes only on touch.
                 nearTypical = median(sample(5, 8) { it.proximityRaw })
+                // Separation is judged against the rest band's own spread, not
+                // a fixed multiple: a rock-steady 32–33 is distinguishable
+                // from 42 with a few counts of clearance, while a band that
+                // jitters across 30 counts needs to be cleared by that much.
+                // The fixed 1.5x bar ejected exactly the calm sensors that
+                // deserve the finest margins.
+                val margin = maxOf(6f, restSpread * 1.5f)
                 proxFailed = when {
                     radar -> false
                     nearTypical.isNaN() || restPeak.isNaN() -> true
-                    nearTypical < restPeak * 1.5f + 10f -> true
+                    nearTypical < restPeak + margin -> true
                     else -> false
                 }
+                // Clearly separated but by little — accept it, say so, and
+                // let the user decide: an occasional false wake is cheaper than a
+                // wizard that refuses the distance the user actually wants.
+                proxMarginal = !proxFailed && !radar &&
+                    nearTypical < restPeak * 1.5f
                 if (!proxFailed && !radar) {
-                    // Geometric midpoint: reflectance is multiplicative, so
-                    // halfway in log-space splits the two states evenly.
-                    proxThreshold = sqrt(restPeak * nearTypical)
+                    // Geometric midpoint, floored just above the rest band so
+                    // a tight pair cannot place the trigger inside the noise.
+                    proxThreshold = maxOf(
+                        sqrt(restPeak * nearTypical),
+                        restPeak + margin * 0.5f,
+                    )
                     draft = draft.copy(
                         manualProximityThreshold = proxThreshold.roundToInt().toFloat(),
                     )
@@ -273,7 +292,8 @@ fun CalibrationWizard(
                     } else if (proxFailed) {
                         Body(
                             "Couldn't tell you apart from the empty room " +
-                                "(empty peaked at ${restPeak.roundToInt()}, you read " +
+                                "(empty read up to ${restPeak.roundToInt()} with noise of " +
+                                "${restSpread.roundToInt()}, you read " +
                                 "${if (nearTypical.isNaN()) "nothing" else nearTypical.roundToInt().toString()}). " +
                                 "Try again, standing closer.",
                             color = Brass,
@@ -285,6 +305,15 @@ fun CalibrationWizard(
                             "You, at wake distance" to "${nearTypical.roundToInt()}",
                             "Trigger set to" to "${proxThreshold.roundToInt()}",
                         )
+                        if (proxMarginal) {
+                            Body(
+                                "The margin is small, so the panel may " +
+                                    "occasionally wake on its own. If it does, " +
+                                    "re-run this standing a little closer.",
+                                size = DETAIL,
+                                color = Brass,
+                            )
+                        }
                     }
                     if (!proxFailed) {
                         BigButton("Next: room brightness") { step = Step.LUX_BRIGHT_READY }
