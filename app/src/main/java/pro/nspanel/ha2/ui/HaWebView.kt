@@ -78,13 +78,14 @@ fun HaWebView(
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
 
-    // One navigation effect, keyed on the configured URL AND the refresh
-    // counter. Refresh used to call reload(), which re-loads wherever the
-    // single-page app has wandered — after someone taps into a sub-view,
-    // "refresh" cemented them there instead of returning to the configured
-    // dashboard. Now both a changed URL and a refresh land on the URL the
-    // settings actually name.
-    LaunchedEffect(appSettings.homeAssistantUrl, reloadTrigger) {
+    // One navigation effect, keyed on the configured URL, the refresh
+    // counter, AND the WebView instance itself. The last key is the
+    // difference between a panel that boots and a panel that boots black:
+    // if the stored settings emit before AndroidView's factory has run, the
+    // effect fires, finds webView null, returns — and with no further key
+    // change, no page ever loads. The Gen2 panel loses that race routinely;
+    // keying on the instance re-runs the effect the moment the view exists.
+    LaunchedEffect(appSettings.homeAssistantUrl, reloadTrigger, webView) {
         val url = appSettings.homeAssistantUrl.trim()
         val wv = webView ?: return@LaunchedEffect
         if (url.isEmpty()) {
